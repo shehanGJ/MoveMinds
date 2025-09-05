@@ -50,4 +50,14 @@ public class DatabaseTestController {
         
         return ResponseEntity.ok(response);
     }
+    
+    @GetMapping("/test-logging")
+    public ResponseEntity<Map<String, String>> testLogging() {
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Test logging endpoint called");
+        response.put("timestamp", java.time.Instant.now().toString());
+        
+        // This will trigger the aspect logging
+        return ResponseEntity.ok(response);
+    }
 }
