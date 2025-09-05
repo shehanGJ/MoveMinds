@@ -1,0 +1,136 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Fitness Tracker Design System - Energetic, modern theme with warm gradients */
+
+@layer base {
+  :root {
+    /* Base colors - clean and modern */
+    --background: 0 0% 98%;
+    --foreground: 222 22% 12%;
+
+    /* Card system with neumorphism inspiration */
+    --card: 0 0% 100%;
+    --card-foreground: 222 22% 12%;
+    --card-shadow: 0 0% 88%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 22% 12%;
+
+    /* Fitness-themed primary colors - vibrant orange/coral */
+    --primary: 16 84% 55%;
+    --primary-light: 16 90% 65%;
+    --primary-dark: 16 78% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary - complementary pink/purple */
+    --secondary: 320 65% 85%;
+    --secondary-light: 320 70% 90%;
+    --secondary-dark: 320 60% 75%;
+    --secondary-foreground: 222 22% 12%;
+
+    /* Accent - energetic coral */
+    --accent: 8 92% 64%;
+    --accent-light: 8 95% 72%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Muted colors */
+    --muted: 220 14% 94%;
+    --muted-foreground: 220 8% 45%;
+
+    /* System colors */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    /* Interactive elements */
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 16 84% 55%;
+
+    --radius: 0.75rem;
+
+    /* Gradients for fitness energy */
+    --gradient-primary: linear-gradient(135deg, hsl(16 84% 55%), hsl(8 92% 64%));
+    --gradient-secondary: linear-gradient(135deg, hsl(320 65% 85%), hsl(280 70% 88%));
+    --gradient-hero: linear-gradient(135deg, hsl(16 90% 65%) 0%, hsl(8 95% 72%) 50%, hsl(320 70% 90%) 100%);
+    
+    /* Shadows for neumorphism effect */
+    --shadow-neumorphism: 6px 6px 12px hsl(220 14% 88%), -6px -6px 12px hsl(0 0% 100%);
+    --shadow-card: 0 4px 6px -1px hsl(220 14% 88% / 0.1), 0 2px 4px -1px hsl(220 14% 88% / 0.06);
+    --shadow-elevated: 0 10px 15px -3px hsl(220 14% 88% / 0.1), 0 4px 6px -2px hsl(220 14% 88% / 0.05);
+
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+
+  .dark {
+    /* Dark mode with fitness energy maintained */
+    --background: 222 22% 8%;
+    --foreground: 0 0% 95%;
+
+    --card: 222 20% 12%;
+    --card-foreground: 0 0% 95%;
+    --card-shadow: 222 22% 6%;
+
+    --popover: 222 20% 12%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 16 84% 60%;
+    --primary-light: 16 90% 70%;
+    --primary-dark: 16 78% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 222 18% 18%;
+    --secondary-light: 222 18% 24%;
+    --secondary-dark: 222 18% 14%;
+    --secondary-foreground: 0 0% 95%;
+
+    --accent: 8 92% 68%;
+    --accent-light: 8 95% 76%;
+    --accent-foreground: 0 0% 100%;
+
+    --muted: 222 18% 18%;
+    --muted-foreground: 220 8% 65%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 76% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 55%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 222 18% 20%;
+    --input: 222 18% 20%;
+    --ring: 16 84% 60%;
+
+    /* Dark mode gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(16 84% 60%), hsl(8 92% 68%));
+    --gradient-secondary: linear-gradient(135deg, hsl(222 18% 18%), hsl(222 18% 24%));
+    --gradient-hero: linear-gradient(135deg, hsl(16 90% 70%) 0%, hsl(8 95% 76%) 50%, hsl(320 50% 70%) 100%);
+    
+    /* Dark shadows */
+    --shadow-neumorphism: 4px 4px 8px hsl(222 22% 4%), -4px -4px 8px hsl(222 20% 16%);
+    --shadow-card: 0 4px 6px -1px hsl(222 22% 4% / 0.3), 0 2px 4px -1px hsl(222 22% 4% / 0.2);
+    --shadow-elevated: 0 10px 15px -3px hsl(222 22% 4% / 0.3), 0 4px 6px -2px hsl(222 22% 4% / 0.2);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}

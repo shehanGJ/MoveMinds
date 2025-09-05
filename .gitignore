@@ -1,0 +1,16 @@
+# Backend (Spring Boot / Maven / Gradle)
+target/
+*.log
+*.class
+*.jar
+*.war
+*.iml
+
+# Frontend (React + Vite + Node.js)
+node_modules/
+dist/
+.env
+.vscode/
+
+# System files
+.DS_Store
