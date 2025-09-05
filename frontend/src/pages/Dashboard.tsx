@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { 
   Dumbbell, 
-  Activity, 
+  Activity as ActivityIcon, 
   MessageCircle, 
   Calendar,
   TrendingUp,
@@ -15,24 +15,44 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import { userApi, newsApi, type User, type NewsItem } from "@/lib/api";
+import { userApi, userProgramsApi, activitiesApi, messagesApi, type User, type UserProgram, type Activity } from "@/lib/api";
 
 export const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [news, setNews] = useState<NewsItem[]>([]);
+  const [userPrograms, setUserPrograms] = useState<UserProgram[]>([]);
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [conversations, setConversations] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [userResponse, newsResponse] = await Promise.all([
+        const [userResponse, userProgramsResponse, activitiesResponse, conversationsResponse] = await Promise.all([
           userApi.getProfile(),
-          newsApi.getAll(),
+          userProgramsApi.getUserPrograms(),
+          activitiesApi.getAll(),
+          messagesApi.getConversations(),
         ]);
         
         setUser(userResponse.data);
-        setNews(newsResponse.data.slice(0, 3)); // Get latest 3 news items
+        
+        // Handle paginated user programs response
+        const userProgramsData = userProgramsResponse.data?.content || [];
+        console.log('User Programs Response:', userProgramsResponse.data);
+        setUserPrograms(userProgramsData);
+        
+        // Handle activities response
+        const activitiesData = activitiesResponse.data || [];
+        console.log('Activities Response:', activitiesResponse.data);
+        setActivities(activitiesData);
+        
+        // Handle conversations response
+        const conversationsData = conversationsResponse.data || [];
+        console.log('Conversations Response:', conversationsResponse.data);
+        setConversations(conversationsData);
+        
       } catch (error) {
+        console.error('Dashboard fetch error:', error);
         toast({
           variant: "destructive",
           title: "Error",
@@ -64,7 +84,7 @@ export const Dashboard = () => {
     {
       title: "Log Activity",
       description: "Record your workout",
-      icon: Activity,
+      icon: ActivityIcon,
       href: "/activities/new",
       variant: "gradient" as const,
     },
@@ -77,33 +97,49 @@ export const Dashboard = () => {
     },
   ];
 
+  // Calculate real stats from API data
+  const activePrograms = userPrograms.filter(up => up.status === 'ACTIVE').length;
+  const totalActivities = activities.length;
+  const totalHours = Math.round(activities.reduce((sum, activity) => sum + (activity.duration || 0), 0) / 60);
+  const achievements = Math.min(12, Math.floor(totalActivities / 2) + Math.floor(activePrograms * 2));
+
   const stats = [
     {
       title: "Programs Enrolled",
-      value: "3",
+      value: activePrograms.toString(),
       icon: Dumbbell,
-      change: "+1 this week",
+      change: `${userPrograms.length} total`,
       trend: "up",
     },
     {
       title: "Activities Logged",
-      value: "24",
-      icon: Activity,
-      change: "+4 this week",
+      value: totalActivities.toString(),
+      icon: ActivityIcon,
+      change: `${activities.filter(a => {
+        const activityDate = new Date(a.logDate);
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        return activityDate >= weekAgo;
+      }).length} this week`,
       trend: "up",
     },
     {
       title: "Hours Trained",
-      value: "36",
+      value: totalHours.toString(),
       icon: Clock,
-      change: "+8 this week",
+      change: `${Math.round(activities.filter(a => {
+        const activityDate = new Date(a.logDate);
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        return activityDate >= weekAgo;
+      }).reduce((sum, activity) => sum + (activity.duration || 0), 0) / 60)} this week`,
       trend: "up",
     },
     {
       title: "Achievements",
-      value: "12",
+      value: achievements.toString(),
       icon: Award,
-      change: "+2 this month",
+      change: "Based on progress",
       trend: "up",
     },
   ];
@@ -118,6 +154,9 @@ export const Dashboard = () => {
       </div>
     );
   }
+
+  // Debug info
+  console.log('Dashboard state:', { user, userPrograms, activities, conversations });
 
   return (
     <div className="space-y-8">
@@ -209,43 +248,34 @@ export const Dashboard = () => {
         </div>
       </div>
 
-      {/* Latest News */}
+      {/* Recent Activities */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">Latest News</h2>
+          <h2 className="text-xl font-semibold">Recent Activities</h2>
           <Button variant="ghost" size="sm" asChild>
-            <Link to="/news">View All</Link>
+            <Link to="/activities">View All</Link>
           </Button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {news.length > 0 ? (
-            news.map((item) => (
-              <Card key={item.id} variant="elevated" className="group cursor-pointer">
-                <CardContent className="p-0">
-                  {item.imageUrl && (
-                    <div className="aspect-video bg-gradient-secondary rounded-t-xl overflow-hidden">
-                      <img
-                        src={item.imageUrl}
-                        alt={item.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                      />
-                    </div>
-                  )}
-                  <div className="p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge variant="secondary" className="text-xs">
-                        News
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(item.createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <h3 className="font-semibold mb-2 line-clamp-2">
-                      {item.title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground line-clamp-3">
-                      {item.content}
-                    </p>
+          {activities.length > 0 ? (
+            activities.slice(0, 3).map((activity) => (
+              <Card key={activity.id} variant="elevated" className="group cursor-pointer">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge variant="secondary" className="text-xs">
+                      {activity.activityType}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(activity.logDate).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <h3 className="font-semibold mb-2">
+                    {activity.activityType} Session
+                  </h3>
+                  <div className="space-y-1 text-sm text-muted-foreground">
+                    <p>Duration: {activity.duration} minutes</p>
+                    <p>Intensity: {activity.intensity}</p>
+                    {activity.result && <p>Result: {activity.result}</p>}
                   </div>
                 </CardContent>
               </Card>
@@ -254,17 +284,54 @@ export const Dashboard = () => {
             <Card variant="neumorphic" className="col-span-full">
               <CardContent className="p-8 text-center">
                 <div className="w-16 h-16 bg-gradient-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Target className="w-8 h-8 text-primary" />
+                  <ActivityIcon className="w-8 h-8 text-primary" />
                 </div>
-                <h3 className="font-semibold mb-2">Stay Updated</h3>
-                <p className="text-muted-foreground">
-                  News and updates will appear here as they become available.
+                <h3 className="font-semibold mb-2">Start Your Journey</h3>
+                <p className="text-muted-foreground mb-4">
+                  Log your first activity to see your progress here.
                 </p>
+                <Button variant="hero" asChild>
+                  <Link to="/activities/new">Log Activity</Link>
+                </Button>
               </CardContent>
             </Card>
           )}
         </div>
       </div>
+
+      {/* Recent Messages */}
+      {conversations.length > 0 && (
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold">Recent Messages</h2>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/messages">View All</Link>
+            </Button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {conversations.slice(0, 3).map((conversation) => (
+              <Card key={conversation.id} variant="elevated" className="group cursor-pointer">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge variant="secondary" className="text-xs">
+                      Message
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(conversation.lastMessageAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <h3 className="font-semibold mb-2">
+                    {conversation.otherUserFirstName} {conversation.otherUserLastName}
+                  </h3>
+                  <p className="text-sm text-muted-foreground line-clamp-2">
+                    {conversation.lastMessageContent}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

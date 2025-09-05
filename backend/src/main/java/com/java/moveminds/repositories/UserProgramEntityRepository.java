@@ -10,4 +10,5 @@ import com.java.moveminds.models.entities.UserProgramEntity;
 @Repository
 public interface UserProgramEntityRepository extends JpaRepository<UserProgramEntity, Integer> {
     Page<UserProgramEntity> findAllByUserByUserId(UserEntity user, Pageable pageable);
+    boolean existsByUserByUserIdAndFitnessProgramByProgramId(UserEntity user, com.java.moveminds.models.entities.FitnessProgramEntity fitnessProgram);
 }

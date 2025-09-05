@@ -48,6 +48,8 @@ export const MyPrograms = () => {
       ]);
       
       const rawUserPrograms = userProgramsResponse.data?.content || [];
+      console.log('Raw User Programs:', rawUserPrograms);
+      
       const normalizedUserPrograms: UserProgram[] = rawUserPrograms.map((u: any) => ({
         // Backend returns FitnessProgramListResponse; program id is u.id, purchase id is u.purchaseId
         id: u.purchaseId ?? u.id, // user-program id (used for delete)
@@ -56,6 +58,8 @@ export const MyPrograms = () => {
         startDate: u.startDate ?? u.start_date ?? u.start ?? u.createdAt ?? new Date().toISOString(),
         endDate: u.endDate ?? u.end_date ?? u.end ?? new Date(Date.now() + 30*24*3600*1000).toISOString(),
       })).filter((u: UserProgram) => !!u.programId);
+      
+      console.log('Normalized User Programs:', normalizedUserPrograms);
       setUserPrograms(normalizedUserPrograms);
       const page = allProgramsResponse.data;
       const items: Program[] = (page.content || []).map((p: any) => ({
@@ -72,6 +76,8 @@ export const MyPrograms = () => {
                  : Array.isArray(p.programImages) && p.programImages.length > 0 ? (p.programImages[0].url || p.programImages[0])
                  : p.imageUrl,
       }));
+      
+      console.log('All Programs:', items);
       setAllPrograms(items);
     } catch (error) {
       toast({
@@ -335,8 +341,57 @@ export const MyPrograms = () => {
         {userPrograms.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {userPrograms.map((userProgram) => {
+              console.log('Looking for program with ID:', userProgram.programId);
+              console.log('Available program IDs:', allPrograms.map(p => p.id));
               const program = allPrograms.find(p => p.id === userProgram.programId);
-              if (!program) return null;
+              console.log('Found program:', program);
+              if (!program) {
+                console.log('Program not found for userProgram:', userProgram);
+                // Show a fallback card with basic info
+                return (
+                  <Card key={userProgram.id} variant="interactive" className="group overflow-hidden">
+                    <div className="aspect-video bg-gradient-secondary overflow-hidden">
+                      <div className="w-full h-full bg-gradient-hero flex items-center justify-center">
+                        <Star className="w-12 h-12 text-white/60" />
+                      </div>
+                    </div>
+                    
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between mb-2">
+                        <Badge className={getStatusColor(userProgram.status)}>
+                          {userProgram.status}
+                        </Badge>
+                      </div>
+                      <CardTitle className="text-lg group-hover:text-primary transition-colors">
+                        Program ID: {userProgram.programId}
+                      </CardTitle>
+                    </CardHeader>
+                    
+                    <CardContent className="pt-0">
+                      <CardDescription className="line-clamp-3 mb-4">
+                        Program details not available
+                      </CardDescription>
+                      
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-4 h-4" />
+                          Started {new Date(userProgram.startDate).toLocaleDateString()}
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => unenrollFromProgram(userProgram.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              }
 
               return (
                 <Card key={userProgram.id} variant="interactive" className="group overflow-hidden">
@@ -394,7 +449,7 @@ export const MyPrograms = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => unenrollFromProgram(program.id)}
+                        onClick={() => unenrollFromProgram(userProgram.id)}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>

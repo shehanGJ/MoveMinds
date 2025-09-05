@@ -45,10 +45,10 @@ export const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
       
       {/* Sidebar */}
       <aside className={cn(
-        "fixed left-0 top-16 z-50 h-[calc(100vh-4rem)] w-64 transform transition-transform duration-200 ease-in-out md:relative md:top-0 md:h-screen md:translate-x-0",
+        "fixed left-0 top-16 z-50 h-[calc(100vh-5rem)] w-64 transform transition-transform duration-200 ease-in-out md:relative md:top-0 md:h-[calc(96vh-1rem)] md:translate-x-0",
         open ? "translate-x-0" : "-translate-x-full"
       )}>
-        <Card variant="neumorphic" padding="sm" className="h-full border-r border-l-0 rounded-none md:rounded-r-xl">
+        <Card variant="neumorphic" padding="sm" className="h-full border-r border-l-0 rounded-none md:rounded-r-xl flex flex-col">
           <div className="flex items-center justify-between p-4 border-b md:hidden">
             <span className="font-semibold">Menu</span>
             <Button
@@ -60,7 +60,7 @@ export const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
             </Button>
           </div>
           
-          <nav className="p-4 space-y-2">
+          <nav className="p-4 space-y-2 flex-1 overflow-y-auto">
             {sidebarItems.map((item) => {
               const isActive = location.pathname === item.href;
               const Icon = item.icon;
@@ -84,7 +84,7 @@ export const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
             })}
           </nav>
           
-          <div className="absolute bottom-4 left-4 right-4">
+          <div className="p-4 mt-auto">
             <Card variant="gradient" padding="sm" className="text-center">
               <p className="text-xs font-medium">Upgrade to Pro</p>
               <p className="text-xs text-muted-foreground mt-1">

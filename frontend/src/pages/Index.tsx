@@ -193,8 +193,8 @@ const Index = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-primary">
-        <div className="container mx-auto px-4 text-center">
+      <section className="py-20 bg-gradient-primary w-full">
+        <div className="w-full px-4 text-center">
           <h2 className="text-3xl lg:text-4xl font-bold text-white mb-6">
             Ready to Start Your Fitness Journey?
           </h2>

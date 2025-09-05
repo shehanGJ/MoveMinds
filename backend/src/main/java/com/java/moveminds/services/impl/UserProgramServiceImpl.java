@@ -3,6 +3,7 @@ package com.java.moveminds.services.impl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import com.java.moveminds.exceptions.ProgramNotFoundException;
 import com.java.moveminds.exceptions.UserNotFoundException;
@@ -64,10 +65,19 @@ public class UserProgramServiceImpl implements UserProgramService {
 
     @Override
     public UserProgramResponse createUserProgram(Principal principal, Integer programId) {
+        if (principal == null || principal.getName() == null) {
+            throw new BadCredentialsException("Unauthorized");
+        }
+
         UserEntity user = userRepository.findByUsername(principal.getName())
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
         FitnessProgramEntity fitnessProgram = fitnessProgramRepository.findById(programId)
                 .orElseThrow(() -> new ProgramNotFoundException("Program not found"));
+
+        // Prevent duplicate enrollment
+        if (userProgramRepository.existsByUserByUserIdAndFitnessProgramByProgramId(user, fitnessProgram)) {
+            throw new IllegalStateException("Already enrolled in this program");
+        }
 
         UserProgramEntity userProgram = new UserProgramEntity();
         userProgram.setUserByUserId(user);

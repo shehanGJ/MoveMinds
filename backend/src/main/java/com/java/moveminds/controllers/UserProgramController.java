@@ -38,8 +38,15 @@ public class UserProgramController {
         if (programId == null || programId <= 0) {
             return ResponseEntity.badRequest().build();
         }
-        UserProgramResponse userProgram = userProgramService.createUserProgram(principal, programId);
-        return ResponseEntity.ok(userProgram);
+        try {
+            UserProgramResponse userProgram = userProgramService.createUserProgram(principal, programId);
+            return ResponseEntity.ok(userProgram);
+        } catch (org.springframework.security.authentication.BadCredentialsException ex) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
+        } catch (IllegalStateException ex) {
+            // Duplicate enrollment
+            return ResponseEntity.status(org.springframework.http.HttpStatus.CONFLICT).build();
+        }
     }
 
     // Endpoint for deleting user program

@@ -96,10 +96,19 @@ export interface Program {
 
 export interface UserProgram {
   id: number;
-  programId: number;
-  status: string;
+  name: string;
+  description: string;
+  duration: number;
+  price: number;
+  difficultyLevel: string;
+  youtubeUrl?: string;
+  locationName: string;
   startDate: string;
   endDate: string;
+  status: string;
+  instructorName: string;
+  instructorId: number;
+  purchaseId: number;
 }
 
 export interface Attribute {
@@ -116,11 +125,11 @@ export interface City {
 
 export interface Activity {
   id: number;
-  type: string;
+  activityType: string;
   duration: number;
   intensity: string;
-  result?: string;
-  date: string;
+  result?: number;
+  logDate: string;
 }
 
 export interface Message {
@@ -145,6 +154,9 @@ export const authApi = {
   login: (data: LoginRequest) => api.post('/auth/login', data),
   signup: (data: SignupRequest) => api.post('/auth/signup', data),
   activate: (token: string) => api.get(`/auth/activate?token=${token}`),
+  // Optional utilities present in backend
+  checkUsername: (username: string) => api.post('/auth/check-username', { username }),
+  resendEmail: (email: string, token: string) => api.post('/auth/resend-email', { email, token }),
 };
 
 // User API
@@ -185,6 +197,7 @@ export const activitiesApi = {
 // Cities API
 export const citiesApi = {
   getAll: () => api.get('/cities'),
+  addCity: (name: string) => api.post('/cities', { name }),
 };
 
 // News API
@@ -202,13 +215,20 @@ export const messagesApi = {
 
 // Categories API
 export const categoriesApi = {
+  getAll: () => api.get('/category'),
   getSubscriptions: () => api.get('/category/subscriptions'),
   subscribe: (categoryId: number) => api.post('/category/subscribe', { categoryId }),
 };
 
 // Attributes API
 export const attributesApi = {
+  getAll: () => api.get('/attributes'),
   getByCategory: (categoryId: number) => api.get(`/attributes/category/${categoryId}`),
+};
+
+// Locations API
+export const locationsApi = {
+  getAll: () => api.get('/location'),
 };
 
 // Comments API
@@ -223,8 +243,8 @@ export const commentsApi = {
 // User-Program enrollment API (used in ProgramDetail)
 export const userProgramsApi = {
   createUserProgram: (programId: number) => api.post(`/user-programs/${programId}`),
-  getUserPrograms: (params?: any) => api.get('/programs/my-programs', { params }),
-  deleteUserProgram: (programId: number) => api.delete(`/user-programs/${programId}`),
+  getUserPrograms: (params?: any) => api.get('/user-programs', { params }),
+  deleteUserProgram: (userProgramId: number) => api.delete(`/user-programs/${userProgramId}`),
 };
 
 export default api;
