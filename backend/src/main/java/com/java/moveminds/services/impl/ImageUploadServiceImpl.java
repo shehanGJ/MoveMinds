@@ -41,7 +41,7 @@ public class ImageUploadServiceImpl implements ImageUploadService {
     }
 
     private String saveResizedImage(MultipartFile file, BufferedImage resizedImage, String fileExtension) throws IOException {
-        String originalFilename = Objects.requireNonNull(file.getOriginalFilename(), "Neispravno ime slike.");
+        String originalFilename = Objects.requireNonNull(file.getOriginalFilename(), "Invalid image name.");
         String modifiedFilename = originalFilename.replaceAll("\\s+", "_");
         String fileName = UUID.randomUUID() + "_" + modifiedFilename;
         Path destFile = Paths.get(uploadPath).resolve(fileName);

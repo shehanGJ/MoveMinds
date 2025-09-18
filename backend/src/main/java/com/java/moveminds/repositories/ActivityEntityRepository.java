@@ -2,8 +2,8 @@ package com.java.moveminds.repositories;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import com.java.moveminds.models.entities.ActivityEntity;
-import com.java.moveminds.models.entities.UserEntity;
+import com.java.moveminds.entities.ActivityEntity;
+import com.java.moveminds.entities.UserEntity;
 
 import java.util.List;
 

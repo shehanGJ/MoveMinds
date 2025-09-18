@@ -8,8 +8,8 @@ import com.itextpdf.text.pdf.PdfWriter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import com.java.moveminds.exceptions.UserNotFoundException;
-import com.java.moveminds.models.dto.response.ActivityResponse;
-import com.java.moveminds.models.entities.UserEntity;
+import com.java.moveminds.dto.response.ActivityResponse;
+import com.java.moveminds.entities.UserEntity;
 import com.java.moveminds.repositories.UserEntityRepository;
 import com.java.moveminds.services.PdfService;
 

@@ -8,7 +8,10 @@ import {
   Calendar,
   BarChart3,
   Settings,
-  X
+  X,
+  Users,
+  Shield,
+  GraduationCap
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -19,19 +22,48 @@ interface SidebarProps {
   onOpenChange: (open: boolean) => void;
 }
 
+// Default user items
 const sidebarItems = [
   { label: "Dashboard", href: "/dashboard", icon: Home },
   { label: "Programs", href: "/programs", icon: Dumbbell },
-  { label: "My Programs", href: "/my-programs", icon: Calendar },
-  { label: "Activities", href: "/activities", icon: Activity },
-  { label: "Analytics", href: "/analytics", icon: BarChart3 },
-  { label: "Messages", href: "/messages", icon: MessageCircle },
-  { label: "Profile", href: "/profile", icon: User },
-  { label: "Settings", href: "/settings", icon: Settings },
+  { label: "My Programs", href: "/dashboard/my-programs", icon: Calendar },
+  { label: "Activities", href: "/dashboard/activities", icon: Activity },
+  { label: "Messages", href: "/dashboard/messages", icon: MessageCircle },
+  { label: "Profile", href: "/dashboard/profile", icon: User },
+];
+
+// Admin specific items
+const adminItems = [
+  { label: "Admin Dashboard", href: "/admin/dashboard", icon: Shield },
+  { label: "User Management", href: "/admin/users", icon: Users },
+  { label: "System Analytics", href: "/admin/analytics", icon: BarChart3 },
+  { label: "System Settings", href: "/admin/settings", icon: Settings },
+];
+
+// Instructor specific items
+const instructorItems = [
+  { label: "Instructor Dashboard", href: "/instructor/dashboard", icon: GraduationCap },
+  { label: "My Programs", href: "/instructor/programs", icon: Dumbbell },
+  { label: "Students", href: "/instructor/students", icon: Users },
+  { label: "Analytics", href: "/instructor/analytics", icon: BarChart3 },
+  { label: "Schedule", href: "/instructor/schedule", icon: Calendar },
 ];
 
 export const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
   const location = useLocation();
+  const userRole = localStorage.getItem('user_role') || 'USER';
+  
+  const getItemsToShow = () => {
+    const cleanRole = userRole.replace('ROLE_', '');
+    if (cleanRole === 'ADMIN') {
+      return [...adminItems, ...sidebarItems];
+    } else if (cleanRole === 'INSTRUCTOR') {
+      return instructorItems; // Only show instructor-specific items
+    }
+    return sidebarItems;
+  };
+  
+  const itemsToShow = getItemsToShow();
 
   return (
     <>
@@ -45,10 +77,10 @@ export const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
       
       {/* Sidebar */}
       <aside className={cn(
-        "fixed left-0 top-16 z-50 h-[calc(100vh-5rem)] w-64 transform transition-transform duration-200 ease-in-out md:relative md:top-0 md:h-[calc(96vh-1rem)] md:translate-x-0",
+        "fixed left-0 top-16 z-50 h-[calc(100vh-4rem)] w-64 transform transition-transform duration-200 ease-in-out md:relative md:top-0 md:h-screen md:translate-x-0",
         open ? "translate-x-0" : "-translate-x-full"
       )}>
-        <Card variant="neumorphic" padding="sm" className="h-full border-r border-l-0 rounded-none md:rounded-r-xl flex flex-col">
+        <Card variant="neumorphic" padding="sm" className="h-full border-r border-l-0 rounded-none md:rounded-r-xl">
           <div className="flex items-center justify-between p-4 border-b md:hidden">
             <span className="font-semibold">Menu</span>
             <Button
@@ -60,8 +92,8 @@ export const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
             </Button>
           </div>
           
-          <nav className="p-4 space-y-2 flex-1 overflow-y-auto">
-            {sidebarItems.map((item) => {
+          <nav className="p-4 space-y-2">
+            {itemsToShow.map((item) => {
               const isActive = location.pathname === item.href;
               const Icon = item.icon;
               
@@ -84,7 +116,7 @@ export const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
             })}
           </nav>
           
-          <div className="p-4 mt-auto">
+          <div className="absolute bottom-4 left-4 right-4">
             <Card variant="gradient" padding="sm" className="text-center">
               <p className="text-xs font-medium">Upgrade to Pro</p>
               <p className="text-xs text-muted-foreground mt-1">

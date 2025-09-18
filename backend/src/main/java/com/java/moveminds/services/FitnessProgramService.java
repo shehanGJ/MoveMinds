@@ -5,11 +5,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import com.java.moveminds.models.dto.CategoryDTO;
-import com.java.moveminds.models.dto.requests.FitnessProgramRequest;
-import com.java.moveminds.models.dto.response.FitnessProgramHomeResponse;
-import com.java.moveminds.models.dto.response.FitnessProgramListResponse;
-import com.java.moveminds.models.dto.response.FitnessProgramResponse;
+import com.java.moveminds.dto.CategoryDTO;
+import com.java.moveminds.dto.requests.FitnessProgramRequest;
+import com.java.moveminds.dto.response.FitnessProgramHomeResponse;
+import com.java.moveminds.dto.response.FitnessProgramListResponse;
+import com.java.moveminds.dto.response.FitnessProgramResponse;
 
 import java.io.IOException;
 import java.security.Principal;

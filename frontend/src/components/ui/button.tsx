@@ -9,19 +9,20 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-card hover:shadow-elevated transform hover:scale-[1.02] active:scale-[0.98]",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-subtle hover:shadow-card transition-all duration-200",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-card hover:shadow-elevated",
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-subtle hover:shadow-card transition-all duration-200",
         outline:
-          "border border-input bg-background hover:bg-accent hover:text-accent-foreground shadow-card hover:shadow-elevated",
+          "border border-border bg-background hover:bg-accent hover:text-accent-foreground shadow-subtle hover:shadow-card transition-all duration-200",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-card hover:shadow-elevated",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
-        hero: "bg-gradient-primary text-primary-foreground hover:shadow-elevated transform hover:scale-[1.05] active:scale-[0.95] font-semibold",
-        gradient: "bg-gradient-hero text-primary-foreground hover:shadow-elevated transform hover:scale-[1.02] active:scale-[0.98] font-medium",
-        fitness: "bg-accent text-accent-foreground hover:bg-accent-light shadow-card hover:shadow-elevated transform hover:scale-[1.02] font-medium",
-        neumorphic: "bg-card text-card-foreground shadow-neumorphism hover:shadow-card border border-border/20 transform hover:scale-[1.02]",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-subtle hover:shadow-card transition-all duration-200",
+        ghost: "hover:bg-accent hover:text-accent-foreground transition-all duration-200",
+        link: "text-primary underline-offset-4 hover:underline transition-all duration-200",
+        hero: "bg-gradient-primary text-primary-foreground hover:shadow-elevated transition-all duration-200 font-semibold",
+        gradient: "bg-gradient-hero text-primary-foreground hover:shadow-elevated transition-all duration-200 font-medium",
+        fitness: "bg-accent text-accent-foreground hover:bg-accent-light shadow-subtle hover:shadow-card transition-all duration-200 font-medium",
+        neumorphic: "bg-card text-card-foreground shadow-neumorphism hover:shadow-card border border-border/20 transition-all duration-200",
+        modern: "bg-card text-foreground border border-border hover:bg-secondary hover:shadow-card transition-all duration-200",
       },
       size: {
         default: "h-10 px-4 py-2",

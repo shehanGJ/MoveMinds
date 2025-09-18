@@ -6,7 +6,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.java.moveminds.models.dto.response.CommentResponse;
+import com.java.moveminds.dto.response.CommentResponse;
 import com.java.moveminds.services.CommentService;
 
 import java.security.Principal;

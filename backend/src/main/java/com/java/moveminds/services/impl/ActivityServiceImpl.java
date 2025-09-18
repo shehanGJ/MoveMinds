@@ -4,10 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import com.java.moveminds.exceptions.UserNotFoundException;
-import com.java.moveminds.models.dto.requests.ActivityRequest;
-import com.java.moveminds.models.dto.response.ActivityResponse;
-import com.java.moveminds.models.entities.ActivityEntity;
-import com.java.moveminds.models.entities.UserEntity;
+import com.java.moveminds.dto.requests.ActivityRequest;
+import com.java.moveminds.dto.response.ActivityResponse;
+import com.java.moveminds.entities.ActivityEntity;
+import com.java.moveminds.entities.UserEntity;
 import com.java.moveminds.repositories.ActivityEntityRepository;
 import com.java.moveminds.repositories.UserEntityRepository;
 import com.java.moveminds.services.ActivityService;
@@ -34,7 +34,7 @@ public class ActivityServiceImpl implements ActivityService {
 
         List<ActivityEntity> activityEntities = activityRepository.findAllByUser(user);
 
-        logService.log(principal, "Pregled aktivnosti");
+        logService.log(principal, "Overview of activities");
 
         return activityEntities
                 .stream()
@@ -57,7 +57,7 @@ public class ActivityServiceImpl implements ActivityService {
 
         ActivityEntity savedActivity = activityRepository.saveAndFlush(activity);
 
-        logService.log(principal, "Dodavanje aktivnosti");
+        logService.log(principal, "Adding an activity");
 
         return modelMapper.map(savedActivity, ActivityResponse.class);
     }

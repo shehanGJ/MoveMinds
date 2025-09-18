@@ -2,11 +2,11 @@ package com.java.moveminds.services;
 
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
-import com.java.moveminds.models.dto.AdviserDTO;
-import com.java.moveminds.models.dto.requests.UpdatePasswordRequest;
-import com.java.moveminds.models.dto.requests.UpdateUserRequest;
-import com.java.moveminds.models.dto.response.NonAdvisersResponse;
-import com.java.moveminds.models.dto.response.UserInfoResponse;
+import com.java.moveminds.dto.AdviserDTO;
+import com.java.moveminds.dto.requests.UpdatePasswordRequest;
+import com.java.moveminds.dto.requests.UpdateUserRequest;
+import com.java.moveminds.dto.response.NonAdvisersResponse;
+import com.java.moveminds.dto.response.UserInfoResponse;
 
 import java.security.Principal;
 import java.util.List;

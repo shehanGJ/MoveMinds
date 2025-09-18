@@ -6,11 +6,11 @@ import org.springframework.stereotype.Service;
 import com.java.moveminds.exceptions.CategoryAlreadyExistsException;
 import com.java.moveminds.exceptions.CategoryNotFoundException;
 import com.java.moveminds.exceptions.UserNotFoundException;
-import com.java.moveminds.models.dto.CategoryWithSubscriptionDTO;
-import com.java.moveminds.models.dto.requests.CategoryRequest;
-import com.java.moveminds.models.entities.CategoryEntity;
-import com.java.moveminds.models.entities.SubscriptionEntity;
-import com.java.moveminds.models.entities.UserEntity;
+import com.java.moveminds.dto.CategoryWithSubscriptionDTO;
+import com.java.moveminds.dto.requests.CategoryRequest;
+import com.java.moveminds.entities.CategoryEntity;
+import com.java.moveminds.entities.SubscriptionEntity;
+import com.java.moveminds.entities.UserEntity;
 import com.java.moveminds.repositories.CategoryEntityRepository;
 import com.java.moveminds.repositories.SubscriptionEntityRepository;
 import com.java.moveminds.repositories.UserEntityRepository;
@@ -46,7 +46,7 @@ public class CategoryServiceImpl implements CategoryService {
         categoryEntity.setDescription(categoryRequest.getDescription());
         categoryRepository.saveAndFlush(categoryEntity);
 
-        logService.log(null,"Dodavanje kategorije");
+        logService.log(null,"Adding a category");
 
         return categoryEntity;
     }
@@ -94,7 +94,7 @@ public class CategoryServiceImpl implements CategoryService {
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         CategoryEntity category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new CategoryNotFoundException("Kategorija sa id-em '" + categoryId + "' ne postoji."));
+                .orElseThrow(() -> new CategoryNotFoundException("Category with id '" + categoryId + "' does not exist."));
 
         Boolean isSubscribed = subscriptionRepository.existsByUserAndCategory(user, category);
 
@@ -107,7 +107,7 @@ public class CategoryServiceImpl implements CategoryService {
             subscriptionRepository.saveAndFlush(subscription);
         }
 
-        logService.log(principal,"Pretplata na kategoriju");
+        logService.log(principal,"Category subscription");
 
         return category;
     }

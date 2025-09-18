@@ -8,7 +8,7 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
-import com.java.moveminds.models.dto.CustomUserDetails;
+import com.java.moveminds.dto.CustomUserDetails;
 import com.java.moveminds.services.JwtService;
 
 import java.security.Key;
@@ -58,10 +58,10 @@ public class JwtServiceImpl implements JwtService {
 
     private String generateToken(Map<String, Object> extraClaims, CustomUserDetails userDetails) {
         List<String> roles = userDetails.getAuthorities().stream()
-                .map(authority -> "ROLE_" + authority.getAuthority())
+                .map(authority -> authority.getAuthority())
                 .collect(Collectors.toList());
 
-        extraClaims.put("roles", roles);  // Use "roles" as the claim key
+        extraClaims.put("roles", roles);  // Store roles in JWT claims
         extraClaims.put("email", userDetails.getEmail());
 
         return Jwts

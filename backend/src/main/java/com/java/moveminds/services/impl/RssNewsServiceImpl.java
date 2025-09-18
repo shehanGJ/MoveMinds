@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import com.java.moveminds.exceptions.RssFeedException;
-import com.java.moveminds.models.dto.RssItemDTO;
+import com.java.moveminds.dto.RssItemDTO;
 import com.java.moveminds.services.RssNewsService;
 
 import java.net.URL;

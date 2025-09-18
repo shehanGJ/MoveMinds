@@ -3,8 +3,8 @@ package com.java.moveminds.services.impl;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
-import com.java.moveminds.models.dto.AttributeDTO;
-import com.java.moveminds.models.dto.AttributeValueDTO;
+import com.java.moveminds.dto.AttributeDTO;
+import com.java.moveminds.dto.AttributeValueDTO;
 import com.java.moveminds.repositories.AttributeEntityRepository;
 import com.java.moveminds.services.AttributeService;
 

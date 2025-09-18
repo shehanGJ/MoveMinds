@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Eye, EyeOff, Dumbbell, CheckCircle } from "lucide-react";
+import { Eye, EyeOff, Dumbbell, CheckCircle, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,6 +21,7 @@ const signupSchema = z.object({
     .min(8, "Password must be at least 8 characters")
     .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, "Password must contain uppercase, lowercase, and number"),
   cityId: z.string().min(1, "Please select a city"),
+  role: z.enum(["USER", "INSTRUCTOR", "ADMIN"]),
   avatarUrl: z.string().url().optional().or(z.literal("")),
 });
 
@@ -31,16 +32,69 @@ export const Signup = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [cities, setCities] = useState<City[]>([]);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
+  const [usernameCheckTimeout, setUsernameCheckTimeout] = useState<NodeJS.Timeout | null>(null);
   const navigate = useNavigate();
 
   const {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<SignupForm>({
     resolver: zodResolver(signupSchema),
   });
+
+  const watchedUsername = watch("username");
+
+  // Debounced username validation
+  const checkUsername = useCallback(async (username: string) => {
+    if (username.length < 3) {
+      setUsernameStatus('idle');
+      return;
+    }
+
+    setUsernameStatus('checking');
+    try {
+      console.log('Making API call for username:', username);
+      const response = await authApi.checkUsername(username);
+      console.log('API response:', response);
+      console.log('Response data type:', typeof response.data);
+      console.log('Response data value:', response.data);
+      
+      // The backend returns a plain boolean, so response.data should be the boolean value
+      const isTaken = response.data;
+      console.log('Username check for', username, ':', isTaken);
+      setUsernameStatus(isTaken ? 'taken' : 'available');
+    } catch (error) {
+      console.error('Username check error:', error);
+      console.error('Error details:', error.response?.data);
+      setUsernameStatus('idle');
+    }
+  }, []);
+
+  // Effect to handle debounced username checking
+  useEffect(() => {
+    if (usernameCheckTimeout) {
+      clearTimeout(usernameCheckTimeout);
+    }
+
+    if (watchedUsername && watchedUsername.length >= 3) {
+      const timeout = setTimeout(() => {
+        checkUsername(watchedUsername);
+      }, 500);
+      setUsernameCheckTimeout(timeout);
+    } else {
+      setUsernameStatus('idle');
+    }
+
+    return () => {
+      if (usernameCheckTimeout) {
+        clearTimeout(usernameCheckTimeout);
+      }
+    };
+  }, [watchedUsername, checkUsername]);
 
   useEffect(() => {
     const fetchCities = async () => {
@@ -59,13 +113,30 @@ export const Signup = () => {
   }, []);
 
   const onSubmit = async (data: SignupForm) => {
+    // Prevent submission if username is taken
+    if (usernameStatus === 'taken') {
+      toast({
+        variant: "destructive",
+        title: "Username taken",
+        description: "Please choose a different username.",
+      });
+      return;
+    }
+
     try {
       setIsLoading(true);
-      await authApi.signup({
+      const response = await authApi.signup({
         ...data,
         cityId: parseInt(data.cityId),
         avatarUrl: data.avatarUrl || undefined,
+        role: data.role || "USER",
       });
+      
+      // Store user role and details in localStorage for immediate access
+      const { role, username, email } = response.data;
+      localStorage.setItem('user_role', role);
+      localStorage.setItem('user_username', username);
+      localStorage.setItem('user_email', email);
       
       setIsSuccess(true);
       toast({
@@ -93,8 +164,18 @@ export const Signup = () => {
             <p className="text-muted-foreground mb-6">
               We've sent you an activation email. Please check your inbox and click the activation link to complete your registration.
             </p>
-            <Button variant="hero" onClick={() => navigate("/login")} className="w-full">
-              Go to Login
+            <Button variant="hero" onClick={() => {
+              const role = localStorage.getItem('user_role');
+              const cleanRole = role?.replace('ROLE_', '') || 'USER';
+              if (cleanRole === 'ADMIN') {
+                navigate("/admin/dashboard");
+              } else if (cleanRole === 'INSTRUCTOR') {
+                navigate("/instructor/dashboard");
+              } else {
+                navigate("/dashboard");
+              }
+            }} className="w-full">
+              Go to Dashboard
             </Button>
           </CardContent>
         </Card>
@@ -130,7 +211,7 @@ export const Signup = () => {
                   <Label htmlFor="firstName">First Name</Label>
                   <Input
                     id="firstName"
-                    placeholder="John"
+                    placeholder="First Name"
                     {...register("firstName")}
                     className={errors.firstName ? "border-destructive" : ""}
                   />
@@ -145,7 +226,7 @@ export const Signup = () => {
                   <Label htmlFor="lastName">Last Name</Label>
                   <Input
                     id="lastName"
-                    placeholder="Doe"
+                    placeholder="Last Name"
                     {...register("lastName")}
                     className={errors.lastName ? "border-destructive" : ""}
                   />
@@ -159,15 +240,45 @@ export const Signup = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="username">Username</Label>
-                <Input
-                  id="username"
-                  placeholder="johndoe"
-                  {...register("username")}
-                  className={errors.username ? "border-destructive" : ""}
-                />
+                <div className="relative">
+                  <Input
+                    id="username"
+                    placeholder="Enter Username"
+                    {...register("username")}
+                    className={`${errors.username ? "border-destructive" : ""} ${
+                      usernameStatus === 'taken' ? "border-destructive" : 
+                      usernameStatus === 'available' ? "border-green-500" : ""
+                    }`}
+                  />
+                  {usernameStatus === 'checking' && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                    </div>
+                  )}
+                  {usernameStatus === 'available' && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <Check className="h-4 w-4 text-green-500" />
+                    </div>
+                  )}
+                  {usernameStatus === 'taken' && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <X className="h-4 w-4 text-destructive" />
+                    </div>
+                  )}
+                </div>
                 {errors.username && (
                   <p className="text-sm text-destructive">
                     {errors.username.message}
+                  </p>
+                )}
+                {usernameStatus === 'taken' && (
+                  <p className="text-sm text-destructive">
+                    This username is already taken. Please choose another one.
+                  </p>
+                )}
+                {usernameStatus === 'available' && (
+                  <p className="text-sm text-green-600">
+                    This username is available!
                   </p>
                 )}
               </div>
@@ -177,7 +288,7 @@ export const Signup = () => {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="john@example.com"
+                  placeholder="Enter your email"
                   {...register("email")}
                   className={errors.email ? "border-destructive" : ""}
                 />
@@ -207,6 +318,28 @@ export const Signup = () => {
                     {errors.cityId.message}
                   </p>
                 )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="role">Account Type</Label>
+                <Select onValueChange={(value) => setValue("role", value as "USER" | "INSTRUCTOR" | "ADMIN")} defaultValue="USER">
+                  <SelectTrigger className={errors.role ? "border-destructive" : ""}>
+                    <SelectValue placeholder="Select account type" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white">
+                    <SelectItem value="USER">Regular User</SelectItem>
+                    <SelectItem value="INSTRUCTOR">Fitness Instructor</SelectItem>
+                    <SelectItem value="ADMIN">Administrator</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.role && (
+                  <p className="text-sm text-destructive">
+                    {errors.role.message}
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  Choose your account type. Instructors can create fitness programs, and Admins have full system access.
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -261,7 +394,7 @@ export const Signup = () => {
                 variant="hero"
                 size="lg"
                 className="w-full"
-                disabled={isLoading}
+                disabled={isLoading || usernameStatus === 'taken' || usernameStatus === 'checking'}
               >
                 {isLoading ? "Creating Account..." : "Create Account"}
               </Button>

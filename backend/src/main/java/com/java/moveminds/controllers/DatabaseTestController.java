@@ -3,7 +3,7 @@ package com.java.moveminds.controllers;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.java.moveminds.models.entities.CityEntity;
+import com.java.moveminds.entities.CityEntity;
 import com.java.moveminds.services.CityService;
 
 import java.util.HashMap;

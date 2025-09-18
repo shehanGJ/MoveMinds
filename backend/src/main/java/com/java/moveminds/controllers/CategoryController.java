@@ -3,9 +3,9 @@ package com.java.moveminds.controllers;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.java.moveminds.models.dto.CategoryWithSubscriptionDTO;
-import com.java.moveminds.models.dto.requests.SubscriptionRequest;
-import com.java.moveminds.models.entities.CategoryEntity;
+import com.java.moveminds.dto.CategoryWithSubscriptionDTO;
+import com.java.moveminds.dto.requests.SubscriptionRequest;
+import com.java.moveminds.entities.CategoryEntity;
 import com.java.moveminds.services.CategoryService;
 
 import java.security.Principal;

@@ -2,69 +2,71 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Fitness Tracker Design System - Energetic, modern theme with warm gradients */
+/* Fitness Tracker Design System - Dark, modern theme with green accents */
 
 @layer base {
   :root {
-    /* Base colors - clean and modern */
-    --background: 0 0% 98%;
-    --foreground: 222 22% 12%;
+    /* Base colors - dark fitness theme */
+    --background: 220 20% 8%;
+    --foreground: 0 0% 95%;
 
-    /* Card system with neumorphism inspiration */
-    --card: 0 0% 100%;
-    --card-foreground: 222 22% 12%;
-    --card-shadow: 0 0% 88%;
+    /* Card system with modern dark styling */
+    --card: 220 18% 12%;
+    --card-foreground: 0 0% 95%;
+    --card-shadow: 220 22% 4%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 22% 12%;
+    --popover: 220 18% 12%;
+    --popover-foreground: 0 0% 95%;
 
-    /* Fitness-themed primary colors - vibrant orange/coral */
-    --primary: 16 84% 55%;
-    --primary-light: 16 90% 65%;
-    --primary-dark: 16 78% 45%;
-    --primary-foreground: 0 0% 100%;
+    /* Fitness-themed primary colors - modern green */
+    --primary: 142 69% 58%;
+    --primary-light: 142 75% 65%;
+    --primary-dark: 142 65% 45%;
+    --primary-foreground: 220 20% 8%;
 
-    /* Secondary - complementary pink/purple */
-    --secondary: 320 65% 85%;
-    --secondary-light: 320 70% 90%;
-    --secondary-dark: 320 60% 75%;
-    --secondary-foreground: 222 22% 12%;
+    /* Secondary - subtle dark gray */
+    --secondary: 220 18% 16%;
+    --secondary-light: 220 18% 20%;
+    --secondary-dark: 220 18% 12%;
+    --secondary-foreground: 0 0% 95%;
 
-    /* Accent - energetic coral */
-    --accent: 8 92% 64%;
-    --accent-light: 8 95% 72%;
-    --accent-foreground: 0 0% 100%;
+    /* Accent - bright green for highlights */
+    --accent: 142 84% 60%;
+    --accent-light: 142 90% 70%;
+    --accent-foreground: 220 20% 8%;
 
     /* Muted colors */
-    --muted: 220 14% 94%;
-    --muted-foreground: 220 8% 45%;
+    --muted: 220 18% 18%;
+    --muted-foreground: 220 8% 65%;
 
     /* System colors */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 142 76% 36%;
-    --success-foreground: 0 0% 100%;
+    --success: 142 76% 55%;
+    --success-foreground: 220 20% 8%;
 
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
+    --warning: 38 92% 55%;
+    --warning-foreground: 220 20% 8%;
 
     /* Interactive elements */
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 16 84% 55%;
+    --border: 220 18% 20%;
+    --input: 220 18% 16%;
+    --ring: 142 69% 58%;
 
     --radius: 0.75rem;
 
-    /* Gradients for fitness energy */
-    --gradient-primary: linear-gradient(135deg, hsl(16 84% 55%), hsl(8 92% 64%));
-    --gradient-secondary: linear-gradient(135deg, hsl(320 65% 85%), hsl(280 70% 88%));
-    --gradient-hero: linear-gradient(135deg, hsl(16 90% 65%) 0%, hsl(8 95% 72%) 50%, hsl(320 70% 90%) 100%);
+    /* Gradients for modern fitness theme */
+    --gradient-primary: linear-gradient(135deg, hsl(142 69% 58%), hsl(142 84% 60%));
+    --gradient-secondary: linear-gradient(135deg, hsl(220 18% 16%), hsl(220 18% 20%));
+    --gradient-hero: linear-gradient(135deg, hsl(220 20% 8%) 0%, hsl(220 18% 12%) 50%, hsl(142 69% 58% / 0.1) 100%);
+    --gradient-card: linear-gradient(135deg, hsl(220 18% 12%), hsl(220 18% 16%));
     
-    /* Shadows for neumorphism effect */
-    --shadow-neumorphism: 6px 6px 12px hsl(220 14% 88%), -6px -6px 12px hsl(0 0% 100%);
-    --shadow-card: 0 4px 6px -1px hsl(220 14% 88% / 0.1), 0 2px 4px -1px hsl(220 14% 88% / 0.06);
-    --shadow-elevated: 0 10px 15px -3px hsl(220 14% 88% / 0.1), 0 4px 6px -2px hsl(220 14% 88% / 0.05);
+     /* Modern shadows for clean design */
+     --shadow-neumorphism: 4px 4px 8px hsl(220 22% 4%), -4px -4px 8px hsl(220 20% 16%);
+     --shadow-card: 0 2px 4px -1px hsl(220 22% 4% / 0.1), 0 1px 2px -1px hsl(220 22% 4% / 0.06);
+     --shadow-elevated: 0 4px 6px -1px hsl(220 22% 4% / 0.1), 0 2px 4px -1px hsl(220 22% 4% / 0.06);
+     --shadow-subtle: 0 1px 3px 0 hsl(220 22% 4% / 0.1), 0 1px 2px 0 hsl(220 22% 4% / 0.06);
 
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);

@@ -3,11 +3,11 @@ package com.java.moveminds.controllers;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.java.moveminds.models.dto.AdviserDTO;
-import com.java.moveminds.models.dto.requests.UpdatePasswordRequest;
-import com.java.moveminds.models.dto.requests.UpdateUserRequest;
-import com.java.moveminds.models.dto.response.NonAdvisersResponse;
-import com.java.moveminds.models.dto.response.UserInfoResponse;
+import com.java.moveminds.dto.AdviserDTO;
+import com.java.moveminds.dto.requests.UpdatePasswordRequest;
+import com.java.moveminds.dto.requests.UpdateUserRequest;
+import com.java.moveminds.dto.response.NonAdvisersResponse;
+import com.java.moveminds.dto.response.UserInfoResponse;
 import com.java.moveminds.services.UserService;
 
 import java.security.Principal;

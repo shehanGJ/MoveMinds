@@ -66,6 +66,14 @@ export interface SignupRequest {
   email: string;
   password: string;
   avatarUrl?: string;
+  role?: 'USER' | 'INSTRUCTOR' | 'ADMIN';
+}
+
+export interface JwtAuthenticationResponse {
+  token: string;
+  role: string;
+  username: string;
+  email: string;
 }
 
 export interface User {
@@ -134,11 +142,103 @@ export interface Activity {
 
 export interface Message {
   id: number;
+  senderId: number;
+  recipientId: number;
   subject: string;
   content: string;
-  fromUserId: number;
-  toUserId: number;
+  sentAt: string;
+  readAt?: string;
+}
+
+export interface Conversation {
+  userId: number;
+  avatarUrl?: string;
+  username: string;
+  lastMessage?: string;
+  lastMessageTime?: string;
+  unread: boolean;
+}
+
+export interface NonAdvisersResponse {
+  userId: number;
+  name: string;
+}
+
+// Admin API Types
+export interface AdminUserResponse {
+  id: number;
+  username: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  isActivated: boolean;
+  avatarUrl?: string;
+  biography?: string;
+  cityName?: string;
   createdAt: string;
+  lastLoginAt?: string;
+  programCount: number;
+  enrollmentCount: number;
+  activityCount: number;
+}
+
+export interface AdminStatsResponse {
+  totalUsers: number;
+  totalInstructors: number;
+  totalAdmins: number;
+  totalPrograms: number;
+  totalEnrollments: number;
+  totalActivities: number;
+  activeUsers: number;
+  inactiveUsers: number;
+  newUsersThisMonth: number;
+  newProgramsThisMonth: number;
+  totalRevenue: number;
+  monthlyRevenue: number;
+}
+
+// Instructor API Types
+export interface InstructorStatsResponse {
+  totalPrograms: number;
+  totalStudents: number;
+  totalEnrollments: number;
+  activeEnrollments: number;
+  completedEnrollments: number;
+  totalRevenue: number;
+  monthlyRevenue: number;
+  averageRating: number;
+  totalReviews: number;
+  newEnrollmentsThisMonth: number;
+  programsThisMonth: number;
+}
+
+export interface ProgramEnrollmentResponse {
+  enrollmentId: number;
+  userId: number;
+  username: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  avatarUrl?: string;
+  programId: number;
+  programName: string;
+  startDate: string;
+  endDate: string;
+  status: string;
+  enrolledAt: string;
+  progress: number;
+  cityName?: string;
+}
+
+export interface PageResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
 }
 
 export interface NewsItem {
@@ -151,11 +251,11 @@ export interface NewsItem {
 
 // Auth API
 export const authApi = {
-  login: (data: LoginRequest) => api.post('/auth/login', data),
-  signup: (data: SignupRequest) => api.post('/auth/signup', data),
+  login: (data: LoginRequest) => api.post<JwtAuthenticationResponse>('/auth/login', data),
+  signup: (data: SignupRequest) => api.post<JwtAuthenticationResponse>('/auth/signup', data),
   activate: (token: string) => api.get(`/auth/activate?token=${token}`),
   // Optional utilities present in backend
-  checkUsername: (username: string) => api.post('/auth/check-username', { username }),
+  checkUsername: (username: string) => api.post<boolean>('/auth/check-username', { username }),
   resendEmail: (email: string, token: string) => api.post('/auth/resend-email', { email, token }),
 };
 
@@ -168,7 +268,12 @@ export const userApi = {
   updateProfile: (data: Partial<User>) => api.patch('/user/info', data),
   // Backend expects PATCH /user/password
   updatePassword: (data: { currentPassword: string; newPassword: string }) =>
-    api.patch('/user/password', data),
+    api.patch('/user/password', {
+      oldPassword: data.currentPassword,
+      newPassword: data.newPassword
+    }),
+  // Get non-advisers (regular users) for messaging
+  getNonAdvisers: () => api.get('/user/non-advisers'),
 };
 
 // Programs API
@@ -207,10 +312,11 @@ export const newsApi = {
 
 // Messages API
 export const messagesApi = {
-  getConversations: () => api.get('/message/conversations'),
-  getConversation: (userId: number) => api.get(`/message/conversation/${userId}`),
-  sendMessage: (data: { toUserId: number; subject: string; content: string }) =>
-    api.post('/message/send', data),
+  getConversations: () => api.get<Conversation[]>('/message/conversations'),
+  getMessagesForConversation: (conversationUserId: number) => 
+    api.get<Message[]>(`/message/conversation/${conversationUserId}`),
+  sendMessage: (data: { recipientId: number; subject: string; content: string }) =>
+    api.post<Message>('/message/send', data),
 };
 
 // Categories API
@@ -245,6 +351,56 @@ export const userProgramsApi = {
   createUserProgram: (programId: number) => api.post(`/user-programs/${programId}`),
   getUserPrograms: (params?: any) => api.get('/user-programs', { params }),
   deleteUserProgram: (userProgramId: number) => api.delete(`/user-programs/${userProgramId}`),
+};
+
+// Admin API
+export const adminApi = {
+  getStats: () => api.get<AdminStatsResponse>('/admin/stats'),
+  getAllUsers: (params?: { page?: number; size?: number; role?: string; search?: string }) => 
+    api.get<PageResponse<AdminUserResponse>>('/admin/users', { params }),
+  getUserById: (userId: number) => api.get<AdminUserResponse>(`/admin/users/${userId}`),
+  updateUserRole: (userId: number, role: string) => 
+    api.put<AdminUserResponse>(`/admin/users/${userId}/role`, { role }),
+  updateUserStatus: (userId: number, active: boolean) => 
+    api.put<AdminUserResponse>(`/admin/users/${userId}/status?active=${active}`),
+  deleteUser: (userId: number) => api.delete(`/admin/users/${userId}`),
+  getAllInstructors: () => api.get<AdminUserResponse[]>('/admin/instructors'),
+  promoteToInstructor: (userId: number) => api.post<AdminUserResponse>(`/admin/users/${userId}/promote-instructor`),
+  demoteFromInstructor: (userId: number) => api.post<AdminUserResponse>(`/admin/users/${userId}/demote-instructor`),
+  getSystemLogs: (limit?: number) => api.get<string[]>(`/admin/logs?limit=${limit || 100}`),
+};
+
+// Instructor API
+export const instructorApi = {
+  getStats: () => api.get<InstructorStatsResponse>('/instructor/stats'),
+  createProgram: (programData: any, files: File[]) => {
+    const formData = new FormData();
+    formData.append('program', JSON.stringify(programData));
+    files.forEach(file => formData.append('files', file));
+    return api.post<Program>('/instructor/programs', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+  updateProgram: (programId: number, programData: any, files?: File[], removedImages?: string[]) => {
+    const formData = new FormData();
+    formData.append('program', JSON.stringify(programData));
+    if (files) files.forEach(file => formData.append('files', file));
+    if (removedImages) formData.append('removedImages', JSON.stringify(removedImages));
+    return api.put<Program>(`/instructor/programs/${programId}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+  deleteProgram: (programId: number) => api.delete(`/instructor/programs/${programId}`),
+  getMyPrograms: (params?: { page?: number; size?: number; sort?: string }) => 
+    api.get<PageResponse<Program>>('/instructor/programs', { params }),
+  getProgramDetails: (programId: number) => api.get<Program>(`/instructor/programs/${programId}`),
+  getProgramEnrollments: (programId: number) => api.get<ProgramEnrollmentResponse[]>(`/instructor/programs/${programId}/enrollments`),
+  getAllEnrollments: (params?: { page?: number; size?: number }) => 
+    api.get<PageResponse<ProgramEnrollmentResponse>>('/instructor/enrollments', { params }),
+  updateEnrollmentStatus: (enrollmentId: number, status: string) => 
+    api.put<ProgramEnrollmentResponse>(`/instructor/enrollments/${enrollmentId}/status?status=${status}`),
+  getStudents: (params?: { page?: number; size?: number }) => 
+    api.get<PageResponse<ProgramEnrollmentResponse>>('/instructor/students', { params }),
 };
 
 export default api;

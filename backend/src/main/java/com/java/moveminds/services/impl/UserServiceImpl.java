@@ -9,14 +9,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.java.moveminds.exceptions.InvalidOldPasswordException;
 import com.java.moveminds.exceptions.UserNotFoundException;
-import com.java.moveminds.models.dto.AdviserDTO;
-import com.java.moveminds.models.dto.CustomUserDetails;
-import com.java.moveminds.models.dto.requests.UpdatePasswordRequest;
-import com.java.moveminds.models.dto.requests.UpdateUserRequest;
-import com.java.moveminds.models.dto.response.NonAdvisersResponse;
-import com.java.moveminds.models.dto.response.UserInfoResponse;
-import com.java.moveminds.models.entities.UserEntity;
-import com.java.moveminds.models.enums.Roles;
+import com.java.moveminds.dto.AdviserDTO;
+import com.java.moveminds.dto.CustomUserDetails;
+import com.java.moveminds.dto.requests.UpdatePasswordRequest;
+import com.java.moveminds.dto.requests.UpdateUserRequest;
+import com.java.moveminds.dto.response.NonAdvisersResponse;
+import com.java.moveminds.dto.response.UserInfoResponse;
+import com.java.moveminds.entities.UserEntity;
+import com.java.moveminds.enums.Roles;
 import com.java.moveminds.repositories.UserEntityRepository;
 import com.java.moveminds.services.LogService;
 import com.java.moveminds.services.UserService;
@@ -45,7 +45,7 @@ public class UserServiceImpl implements UserService {
         }
 
         UserEntity user = userOptional.orElseThrow(() -> new UsernameNotFoundException("User not found: " + usernameOrEmail));
-        List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(user.getRole().name()));
+        List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
         logService.log(null, "User acquisition");
         return new CustomUserDetails(user.getUsername(), user.getPassword(), user.getEmail(), authorities);
     }

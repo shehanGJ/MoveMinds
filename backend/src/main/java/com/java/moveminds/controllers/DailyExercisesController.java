@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import com.java.moveminds.models.dto.ExerciseDTO;
+import com.java.moveminds.dto.ExerciseDTO;
 import com.java.moveminds.services.DailyExerciseService;
 
 import java.io.IOException;

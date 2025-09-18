@@ -35,15 +35,29 @@ export const Login = () => {
     try {
       setIsLoading(true);
       const response = await authApi.login(data);
-      const { token } = response.data;
+      const { token, role, username, email } = response.data;
       
       setAuthToken(token);
+      
+      // Store user role and details in localStorage
+      localStorage.setItem('user_role', role);
+      localStorage.setItem('user_username', username);
+      localStorage.setItem('user_email', email);
+      
       toast({
         title: "Welcome back!",
-        description: "You have successfully logged in.",
+        description: `Welcome back, ${username}!`,
       });
       
-      navigate("/dashboard");
+      // Redirect based on role (remove ROLE_ prefix if present)
+      const cleanRole = role.replace('ROLE_', '');
+      if (cleanRole === 'ADMIN') {
+        navigate("/admin/dashboard");
+      } else if (cleanRole === 'INSTRUCTOR') {
+        navigate("/instructor/dashboard");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (error: any) {
       toast({
         variant: "destructive",

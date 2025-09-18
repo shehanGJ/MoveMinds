@@ -1,8 +1,8 @@
 package com.java.moveminds.services;
 
 import org.springframework.stereotype.Service;
-import com.java.moveminds.models.dto.requests.ActivityRequest;
-import com.java.moveminds.models.dto.response.ActivityResponse;
+import com.java.moveminds.dto.requests.ActivityRequest;
+import com.java.moveminds.dto.response.ActivityResponse;
 
 import java.security.Principal;
 import java.util.List;

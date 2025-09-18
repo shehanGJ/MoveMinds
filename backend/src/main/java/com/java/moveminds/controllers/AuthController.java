@@ -4,11 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.java.moveminds.models.dto.requests.CheckUsernameRequest;
-import com.java.moveminds.models.dto.requests.ResendEmailRequest;
-import com.java.moveminds.models.dto.response.JwtAuthenticationResponse;
-import com.java.moveminds.models.dto.requests.LoginRequest;
-import com.java.moveminds.models.dto.requests.SignUpRequest;
+import com.java.moveminds.dto.requests.CheckUsernameRequest;
+import com.java.moveminds.dto.requests.ResendEmailRequest;
+import com.java.moveminds.dto.response.JwtAuthenticationResponse;
+import com.java.moveminds.dto.requests.LoginRequest;
+import com.java.moveminds.dto.requests.SignUpRequest;
 import com.java.moveminds.services.AuthenticationService;
 
 @RestController

@@ -4,8 +4,8 @@ import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import com.java.moveminds.models.dto.response.FitnessProgramListResponse;
-import com.java.moveminds.models.dto.response.UserProgramResponse;
+import com.java.moveminds.dto.response.FitnessProgramListResponse;
+import com.java.moveminds.dto.response.UserProgramResponse;
 
 import java.security.Principal;
 

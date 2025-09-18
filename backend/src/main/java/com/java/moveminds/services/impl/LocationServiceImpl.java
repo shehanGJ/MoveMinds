@@ -4,7 +4,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import com.java.moveminds.exceptions.LocationAlreadyExistsException;
-import com.java.moveminds.models.entities.LocationEntity;
+import com.java.moveminds.entities.LocationEntity;
 import com.java.moveminds.repositories.LocationEntityRepository;
 import com.java.moveminds.services.LocationService;
 import com.java.moveminds.services.LogService;

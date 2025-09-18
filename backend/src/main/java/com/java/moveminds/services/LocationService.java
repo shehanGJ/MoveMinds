@@ -2,7 +2,7 @@ package com.java.moveminds.services;
 
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
-import com.java.moveminds.models.entities.LocationEntity;
+import com.java.moveminds.entities.LocationEntity;
 
 import java.util.List;
 

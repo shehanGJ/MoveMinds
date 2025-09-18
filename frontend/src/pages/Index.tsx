@@ -41,16 +41,22 @@ const Index = () => {
 
   const testimonials = [
     {
-      name: "Sarah Johnson",
+      name: "Shehan Anujaya",
       role: "Fitness Enthusiast",
       content: "MoveMinds has completely transformed my workout routine. The personalized programs are amazing!",
       rating: 5
     },
     {
-      name: "Mike Chen",
+      name: "Lucion Pushparaj",
       role: "Personal Trainer", 
       content: "As a trainer, I love how I can create and share programs with my clients through this platform.",
       rating: 5
+    },
+    {
+      name: "Udara San",
+      role: "Yoga Instructor",
+      content: "MoveMinds' guided meditations and stretching routines are the perfect addition to my practice.",
+      rating: 4
     }
   ];
 
@@ -157,12 +163,12 @@ const Index = () => {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="flex flex-col lg:flex-row gap-8 max-w-6xl mx-auto">
             {testimonials.map((testimonial, index) => (
               <Card 
                 key={testimonial.name} 
                 variant="elevated" 
-                className="animate-fade-in"
+                className="animate-fade-in flex-1"
                 style={{ animationDelay: `${index * 200}ms` }}
               >
                 <CardContent className="p-6">

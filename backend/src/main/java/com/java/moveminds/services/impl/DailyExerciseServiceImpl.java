@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import com.java.moveminds.exceptions.ExerciseFetchException;
-import com.java.moveminds.models.dto.ExerciseDTO;
+import com.java.moveminds.dto.ExerciseDTO;
 import com.java.moveminds.services.DailyExerciseService;
 import com.java.moveminds.services.LogService;
 

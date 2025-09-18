@@ -2,7 +2,7 @@ package com.java.moveminds.repositories;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import com.java.moveminds.models.entities.ProgramImageEntity;
+import com.java.moveminds.entities.ProgramImageEntity;
 
 import java.util.Optional;
 

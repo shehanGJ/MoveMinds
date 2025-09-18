@@ -2,9 +2,9 @@ package com.java.moveminds.services;
 
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
-import com.java.moveminds.models.dto.CategoryWithSubscriptionDTO;
-import com.java.moveminds.models.dto.requests.CategoryRequest;
-import com.java.moveminds.models.entities.CategoryEntity;
+import com.java.moveminds.dto.CategoryWithSubscriptionDTO;
+import com.java.moveminds.dto.requests.CategoryRequest;
+import com.java.moveminds.entities.CategoryEntity;
 
 import java.security.Principal;
 import java.util.List;

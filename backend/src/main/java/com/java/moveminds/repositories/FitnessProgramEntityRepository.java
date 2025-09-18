@@ -4,8 +4,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import com.java.moveminds.models.entities.CategoryEntity;
-import com.java.moveminds.models.entities.FitnessProgramEntity;
+import com.java.moveminds.entities.CategoryEntity;
+import com.java.moveminds.entities.FitnessProgramEntity;
 
 import java.time.LocalDateTime;
 import java.util.List;

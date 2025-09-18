@@ -1,8 +1,8 @@
 package com.java.moveminds.services;
 
 import org.springframework.stereotype.Service;
-import com.java.moveminds.models.dto.ConversationDTO;
-import com.java.moveminds.models.dto.MessageDTO;
+import com.java.moveminds.dto.ConversationDTO;
+import com.java.moveminds.dto.MessageDTO;
 
 import java.security.Principal;
 import java.util.List;

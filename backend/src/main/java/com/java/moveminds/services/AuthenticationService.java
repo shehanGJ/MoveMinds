@@ -2,9 +2,9 @@ package com.java.moveminds.services;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import com.java.moveminds.models.dto.response.JwtAuthenticationResponse;
-import com.java.moveminds.models.dto.requests.LoginRequest;
-import com.java.moveminds.models.dto.requests.SignUpRequest;
+import com.java.moveminds.dto.response.JwtAuthenticationResponse;
+import com.java.moveminds.dto.requests.LoginRequest;
+import com.java.moveminds.dto.requests.SignUpRequest;
 
 @Service
 public interface AuthenticationService {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { 
   Dumbbell, 
   Activity as ActivityIcon, 
@@ -18,6 +18,7 @@ import { toast } from "@/hooks/use-toast";
 import { userApi, userProgramsApi, activitiesApi, messagesApi, type User, type UserProgram, type Activity } from "@/lib/api";
 
 export const Dashboard = () => {
+  const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [userPrograms, setUserPrograms] = useState<UserProgram[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
@@ -25,6 +26,22 @@ export const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Check user role and redirect if needed
+    const userRole = localStorage.getItem('user_role');
+    console.log('Dashboard: User role is:', userRole);
+    console.log('Dashboard: Current URL:', window.location.pathname);
+    
+    const cleanRole = userRole?.replace('ROLE_', '') || 'USER';
+    if (cleanRole === 'ADMIN') {
+      console.log('Dashboard: Redirecting admin to admin dashboard');
+      navigate('/admin/dashboard');
+      return;
+    } else if (cleanRole === 'INSTRUCTOR') {
+      console.log('Dashboard: Redirecting instructor to instructor dashboard');
+      navigate('/instructor/dashboard');
+      return;
+    }
+
     const fetchData = async () => {
       try {
         const [userResponse, userProgramsResponse, activitiesResponse, conversationsResponse] = await Promise.all([
@@ -163,22 +180,22 @@ export const Dashboard = () => {
       {/* Welcome Section */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
         <div className="flex items-center gap-4">
-          <Avatar className="w-16 h-16">
+          <Avatar className="w-20 h-20 ring-2 ring-primary/30 shadow-subtle">
             <AvatarImage src={user?.avatarUrl} alt={user?.firstName} />
-            <AvatarFallback className="bg-gradient-primary text-white text-lg">
+            <AvatarFallback className="bg-gradient-primary text-white text-xl font-bold">
               {user?.firstName?.[0]}{user?.lastName?.[0]}
             </AvatarFallback>
           </Avatar>
           <div>
-            <h1 className="text-2xl font-bold">
+            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
               Welcome back, {user?.firstName}! 👋
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground text-lg">
               Ready to crush your fitness goals today?
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           <Button variant="outline" asChild>
             <Link to="/profile">View Profile</Link>
           </Button>
@@ -193,22 +210,22 @@ export const Dashboard = () => {
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
-            <Card key={stat.title} variant="fitness" className="relative overflow-hidden">
+            <Card key={stat.title} className="relative overflow-hidden bg-gradient-card border-border shadow-subtle hover:shadow-card transition-all duration-200">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">
+                    <p className="text-sm font-semibold text-muted-foreground">
                       {stat.title}
                     </p>
-                    <p className="text-2xl font-bold">{stat.value}</p>
+                    <p className="text-3xl font-bold text-foreground">{stat.value}</p>
                   </div>
-                  <div className="w-12 h-12 bg-gradient-primary/10 rounded-full flex items-center justify-center">
-                    <Icon className="w-6 h-6 text-primary" />
+                  <div className="w-14 h-14 bg-gradient-primary/20 rounded-full flex items-center justify-center shadow-subtle">
+                    <Icon className="w-7 h-7 text-primary" />
                   </div>
                 </div>
                 <div className="mt-4 flex items-center gap-1">
-                  <TrendingUp className="w-4 h-4 text-success" />
-                  <span className="text-sm text-success font-medium">
+                  <TrendingUp className="w-4 h-4 text-primary" />
+                  <span className="text-sm text-primary font-semibold">
                     {stat.change}
                   </span>
                 </div>
@@ -220,25 +237,24 @@ export const Dashboard = () => {
 
       {/* Quick Actions */}
       <div>
-        <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <h2 className="text-2xl font-bold mb-6 bg-gradient-primary bg-clip-text text-transparent">Quick Actions</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {quickActions.map((action) => {
             const Icon = action.icon;
             return (
               <Card
                 key={action.title}
-                variant="interactive"
-                className="group hover:scale-105 transition-all duration-200"
+                className="group hover:scale-105 transition-all duration-200 bg-gradient-card border-border shadow-subtle hover:shadow-card"
               >
                 <CardContent className="p-6 text-center">
-                  <div className="w-12 h-12 bg-gradient-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-gradient-primary/20 transition-colors">
-                    <Icon className="w-6 h-6 text-primary" />
+                  <div className="w-16 h-16 bg-gradient-primary/20 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-gradient-primary/30 transition-all duration-200 shadow-subtle">
+                    <Icon className="w-8 h-8 text-primary" />
                   </div>
-                  <h3 className="font-semibold mb-2">{action.title}</h3>
+                  <h3 className="font-bold mb-2 text-foreground">{action.title}</h3>
                   <p className="text-sm text-muted-foreground mb-4">
                     {action.description}
                   </p>
-                  <Button variant={action.variant} size="sm" asChild className="w-full">
+                  <Button variant="hero" size="sm" asChild className="w-full">
                     <Link to={action.href}>Get Started</Link>
                   </Button>
                 </CardContent>

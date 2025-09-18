@@ -1,7 +1,7 @@
 package com.java.moveminds.services.impl;
 
+import com.java.moveminds.entities.*;
 import com.java.moveminds.exceptions.*;
-import com.java.moveminds.models.entities.*;
 import com.java.moveminds.repositories.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -10,16 +10,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import  com.java.moveminds.exceptions.*;
-import com.java.moveminds.models.dto.AttributeDTO;
-import com.java.moveminds.models.dto.AttributeValueDTO;
-import com.java.moveminds.models.dto.CategoryDTO;
-import com.java.moveminds.models.dto.requests.FitnessProgramRequest;
-import com.java.moveminds.models.dto.response.FitnessProgramHomeResponse;
-import com.java.moveminds.models.dto.response.FitnessProgramListResponse;
-import com.java.moveminds.models.dto.response.FitnessProgramResponse;
-import  com.java.moveminds.models.entities.*;
-import  com.java.moveminds.repositories.*;
+import com.java.moveminds.dto.AttributeDTO;
+import com.java.moveminds.dto.AttributeValueDTO;
+import com.java.moveminds.dto.CategoryDTO;
+import com.java.moveminds.dto.requests.FitnessProgramRequest;
+import com.java.moveminds.dto.response.FitnessProgramHomeResponse;
+import com.java.moveminds.dto.response.FitnessProgramListResponse;
+import com.java.moveminds.dto.response.FitnessProgramResponse;
 import com.java.moveminds.services.FitnessProgramService;
 import com.java.moveminds.services.ImageUploadService;
 import com.java.moveminds.services.LogService;
@@ -49,7 +46,7 @@ public class FitnessProgramServiceImpl implements FitnessProgramService {
     /**
      * Adds a new fitness program based on the provided request and files.
      *
-     * @param principal             the security principal of the authenticated user
+     * @param principal             the config principal of the authenticated user
      * @param fitnessProgramRequest the request object containing the details of the fitness program to be added
      * @param files                 the list of files to be associated with the fitness program, can be null
      * @return a FitnessProgramResponse object containing the ID of the newly created fitness program
@@ -64,6 +61,14 @@ public class FitnessProgramServiceImpl implements FitnessProgramService {
     @Override
     @Transactional
     public FitnessProgramResponse addFitnessProgram(Principal principal, FitnessProgramRequest fitnessProgramRequest, List<MultipartFile> files) throws IOException {
+
+        // Validate user role - only instructors and admins can create programs
+        UserEntity user = userRepository.findByUsername(principal.getName())
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        
+        if (user.getRole() != com.java.moveminds.enums.Roles.INSTRUCTOR && user.getRole() != com.java.moveminds.enums.Roles.ADMIN) {
+            throw new UnauthorizedException("Only instructors and admins can create programs");
+        }
 
         // Check if program with the same name already exists
         Optional<FitnessProgramEntity> existingProgram = fitnessProgramRepository.findByName(fitnessProgramRequest.getName());
@@ -90,8 +95,6 @@ public class FitnessProgramServiceImpl implements FitnessProgramService {
                 .orElseThrow(() -> new CategoryNotFoundException("Category not found"));
         fitnessProgramEntity.setCategory(category);
 
-        UserEntity user = userRepository.findByUsername(principal.getName())
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
         fitnessProgramEntity.setUser(user);
 
         if (fitnessProgramRequest.getLocationId() != null) {
@@ -144,7 +147,7 @@ public class FitnessProgramServiceImpl implements FitnessProgramService {
     /**
      * Retrieves the fitness programs created by the authenticated user.
      *
-     * @param principal the security principal of the authenticated user
+     * @param principal the config principal of the authenticated user
      * @param pageable  the pagination information
      * @return a Page of FitnessProgramListResponse objects
      * @throws UserNotFoundException if the authenticated user is not found

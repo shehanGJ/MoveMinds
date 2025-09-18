@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import com.java.moveminds.models.dto.AttributeDTO;
+import com.java.moveminds.dto.AttributeDTO;
 import com.java.moveminds.services.AttributeService;
 
 import java.util.List;

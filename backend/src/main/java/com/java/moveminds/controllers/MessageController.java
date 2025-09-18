@@ -3,8 +3,8 @@ package com.java.moveminds.controllers;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.java.moveminds.models.dto.ConversationDTO;
-import com.java.moveminds.models.dto.MessageDTO;
+import com.java.moveminds.dto.ConversationDTO;
+import com.java.moveminds.dto.MessageDTO;
 import com.java.moveminds.services.MessagingService;
 
 import java.security.Principal;

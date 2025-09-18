@@ -3,7 +3,7 @@ package com.java.moveminds.repositories;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
-import com.java.moveminds.models.entities.CategoryEntity;
+import com.java.moveminds.entities.CategoryEntity;
 
 import java.util.List;
 import java.util.Optional;

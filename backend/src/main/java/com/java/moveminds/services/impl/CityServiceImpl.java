@@ -2,7 +2,7 @@ package com.java.moveminds.services.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import com.java.moveminds.models.entities.CityEntity;
+import com.java.moveminds.entities.CityEntity;
 import com.java.moveminds.repositories.CityEntityRepository;
 import com.java.moveminds.services.CityService;
 import com.java.moveminds.services.LogService;

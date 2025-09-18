@@ -6,8 +6,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.java.moveminds.models.dto.response.FitnessProgramListResponse;
-import com.java.moveminds.models.dto.response.UserProgramResponse;
+import com.java.moveminds.dto.response.FitnessProgramListResponse;
+import com.java.moveminds.dto.response.UserProgramResponse;
 import com.java.moveminds.services.UserProgramService;
 
 import java.security.Principal;

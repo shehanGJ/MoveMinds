@@ -9,13 +9,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import com.java.moveminds.models.dto.CategoryDTO;
-import com.java.moveminds.models.dto.requests.FitnessProgramRequest;
-import com.java.moveminds.models.dto.response.FitnessProgramHomeResponse;
-import com.java.moveminds.models.dto.response.FitnessProgramListResponse;
-import com.java.moveminds.models.dto.response.FitnessProgramResponse;
+import com.java.moveminds.dto.CategoryDTO;
+import com.java.moveminds.dto.requests.FitnessProgramRequest;
+import com.java.moveminds.dto.response.FitnessProgramHomeResponse;
+import com.java.moveminds.dto.response.FitnessProgramListResponse;
+import com.java.moveminds.dto.response.FitnessProgramResponse;
 import com.java.moveminds.services.FitnessProgramService;
 
 import java.io.IOException;
@@ -37,12 +38,13 @@ public class FitnessProgramController {
      *
      * @param programRequest the request object containing the fitness program details
      * @param files          the list of files to be associated with the fitness program
-     * @param principal      the security principal of the authenticated user
+     * @param principal      the config principal of the authenticated user
      * @return a ResponseEntity containing the created FitnessProgramResponse object if successful,
      * or a BAD_REQUEST status if an error occurs,
      * or an INTERNAL_SERVER_ERROR status if an unexpected error occurs
      */
     @PostMapping(consumes = {"multipart/form-data"})
+    @PreAuthorize("hasRole('ROLE_INSTRUCTOR') or hasRole('ROLE_ADMIN')")
     public ResponseEntity<FitnessProgramResponse> createProgram(
             @RequestPart("program") FitnessProgramRequest programRequest,
             @RequestPart("files") List<MultipartFile> files,
@@ -140,7 +142,7 @@ public class FitnessProgramController {
      * @param page      the page number to retrieve, defaults to 0 if not provided
      * @param size      the number of items per page, defaults to 5 if not provided
      * @param sort      the sorting criteria in the format "field,direction" (e.g., "name,asc"), can be null
-     * @param principal the security principal of the authenticated user
+     * @param principal the config principal of the authenticated user
      * @return a ResponseEntity containing a Page of FitnessProgramListResponse objects
      */
     @GetMapping("/my-programs")
@@ -167,6 +169,7 @@ public class FitnessProgramController {
      * or an INTERNAL_SERVER_ERROR status if an unexpected error occurs
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ROLE_INSTRUCTOR') or hasRole('ROLE_ADMIN')")
     public ResponseEntity<FitnessProgramResponse> updateProgram(
             @PathVariable Integer id,
             @RequestPart("program") FitnessProgramRequest programRequest,
@@ -191,10 +194,11 @@ public class FitnessProgramController {
      * Handles HTTP DELETE requests to delete a fitness program by its ID.
      *
      * @param id the ID of the fitness program to delete
-     * @param principal the security principal of the authenticated user
+     * @param principal the config principal of the authenticated user
      * @return a ResponseEntity with status 204 No Content if the deletion is successful
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ROLE_INSTRUCTOR') or hasRole('ROLE_ADMIN')")
     public ResponseEntity<Void> deleteProgram(@PathVariable("id") Integer id, Principal principal) throws IOException {
         if (id == null || id <= 0) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();

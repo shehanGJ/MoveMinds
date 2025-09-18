@@ -1,7 +1,7 @@
 package com.java.moveminds.services;
 
 import org.springframework.stereotype.Service;
-import com.java.moveminds.models.entities.CityEntity;
+import com.java.moveminds.entities.CityEntity;
 
 import java.util.List;
 

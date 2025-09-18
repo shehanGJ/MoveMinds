@@ -37,7 +37,7 @@ public class EmailServiceImpl implements EmailService {
             }
 
             helper.setTo(to);
-            helper.setSubject("Task activation");
+            helper.setSubject("Welcome to MoveMinds - Activate Your Account");
             helper.setText(buildActivationEmail(activationLink), true);
 
             logService.log(null, "Sending an email to activate your account");
@@ -75,14 +75,32 @@ public class EmailServiceImpl implements EmailService {
     }
 
     private String buildActivationEmail(String activationLink) {
-        // This could be a template, but just for this example I will hardcode it
-        return "<div style=\"font-family: Arial, sans-serif; font-size: 16px;\">" +
-                "<h2>Task activation</h2>" +
-                "<p>Thank you for registering. Click on the link below to activate your account:</p>" +
-                "<a href=\"" + activationLink + "\">Activate the task</a>" +
-                "<p>We are glad to be hanging out.</p>" +
-                "<p>Thanks,</p>" +
-                "<p>Your team</p>" +
+        return "<div style=\"font-family: Arial, sans-serif; font-size: 16px; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa;\">" +
+                "<div style=\"background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);\">" +
+                "<div style=\"text-align: center; margin-bottom: 30px;\">" +
+                "<h1 style=\"color: #2563eb; margin: 0; font-size: 28px;\">Welcome to MoveMinds!</h1>" +
+                "<p style=\"color: #6b7280; margin: 10px 0 0 0;\">Your Fitness Journey Starts Here</p>" +
+                "</div>" +
+                "<p style=\"color: #374151; line-height: 1.6; margin-bottom: 20px;\">" +
+                "Thank you for registering with MoveMinds! We're excited to help you achieve your fitness goals." +
+                "</p>" +
+                "<p style=\"color: #374151; line-height: 1.6; margin-bottom: 30px;\">" +
+                "To complete your account setup and start your fitness journey, please click the button below to activate your account:" +
+                "</p>" +
+                "<div style=\"text-align: center; margin: 30px 0;\">" +
+                "<a href=\"" + activationLink + "\" style=\"background-color: #2563eb; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; font-size: 16px;\">" +
+                "Activate My Account" +
+                "</a>" +
+                "</div>" +
+                "<p style=\"color: #6b7280; font-size: 14px; line-height: 1.6; margin-top: 30px;\">" +
+                "If you didn't create an account with MoveMinds, please ignore this email. This activation link will expire in 24 hours." +
+                "</p>" +
+                "<hr style=\"border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;\">" +
+                "<p style=\"color: #6b7280; font-size: 14px; margin: 0;\">" +
+                "Thanks,<br>" +
+                "<strong>The MoveMinds Team</strong>" +
+                "</p>" +
+                "</div>" +
                 "</div>";
     }
 }
