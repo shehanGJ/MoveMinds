@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Users, 
   BookOpen, 
@@ -34,104 +35,315 @@ import {
   Ban,
   UserCheck,
   Crown,
-  Briefcase
+  Briefcase,
+  Loader2
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useState, useEffect } from "react";
+import { adminApi, AdminStatsResponse, AdminUserResponse, AdminProgramResponse, AdminAnalyticsResponse, PageResponse } from "@/lib/api";
+import { toast } from "@/hooks/use-toast";
 
 export const AdminDashboard = () => {
-  const systemStats = [
-    { title: "Total Users", value: "2,547", change: "+148", icon: Users, color: "text-primary" },
-    { title: "Active Programs", value: "89", change: "+7", icon: BookOpen, color: "text-blue-400" },
-    { title: "Monthly Revenue", value: "$45,230", change: "+22%", icon: DollarSign, color: "text-green-400" },
+  // State management
+  const [stats, setStats] = useState<AdminStatsResponse | null>(null);
+  const [users, setUsers] = useState<AdminUserResponse[]>([]);
+  const [instructors, setInstructors] = useState<AdminUserResponse[]>([]);
+  const [programs, setPrograms] = useState<AdminProgramResponse[]>([]);
+  const [analytics, setAnalytics] = useState<AdminAnalyticsResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedRole, setSelectedRole] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize] = useState(10);
+  
+  // Programs state
+  const [programSearchTerm, setProgramSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string>("");
+  const [selectedStatus, setSelectedStatus] = useState<string>("");
+
+  // Fetch admin statistics
+  const fetchStats = async () => {
+    try {
+      const response = await adminApi.getStats();
+      setStats(response.data);
+    } catch (error) {
+      console.error('Failed to fetch admin stats:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load admin statistics"
+      });
+    }
+  };
+
+  // Fetch all users
+  const fetchUsers = async () => {
+    try {
+      const params: any = {
+        page: currentPage,
+        size: pageSize
+      };
+      
+      // Only add role and search if they have values
+      if (selectedRole && selectedRole.trim() !== '') {
+        params.role = selectedRole;
+      }
+      if (searchTerm && searchTerm.trim() !== '') {
+        params.search = searchTerm;
+      }
+      
+      console.log('Fetching users with params:', params);
+      const response = await adminApi.getAllUsers(params);
+      console.log('Users response:', response.data);
+      setUsers(response.data.content);
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load users"
+      });
+    }
+  };
+
+  // Fetch instructors
+  const fetchInstructors = async () => {
+    try {
+      const response = await adminApi.getAllInstructors();
+      setInstructors(response.data);
+    } catch (error) {
+      console.error('Failed to fetch instructors:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load instructors"
+      });
+    }
+  };
+
+  // Fetch all programs
+  const fetchPrograms = async () => {
+    try {
+      const params: any = {
+        page: 0,
+        size: 20
+      };
+      
+      // Only add filters if they have values
+      if (programSearchTerm && programSearchTerm.trim() !== '') {
+        params.search = programSearchTerm;
+      }
+      if (selectedCategory && selectedCategory.trim() !== '') {
+        params.category = selectedCategory;
+      }
+      if (selectedDifficulty && selectedDifficulty.trim() !== '') {
+        params.difficulty = selectedDifficulty;
+      }
+      
+      console.log('Fetching programs with params:', params);
+      
+      // Use different API endpoints based on status filter
+      let response;
+      if (selectedStatus === 'active') {
+        // For activation APIs, only pass pagination params
+        const activationParams = { page: params.page, size: params.size };
+        response = await adminApi.getActivePrograms(activationParams);
+      } else if (selectedStatus === 'inactive') {
+        // For activation APIs, only pass pagination params
+        const activationParams = { page: params.page, size: params.size };
+        response = await adminApi.getInactivePrograms(activationParams);
+      } else {
+        // For getAllPrograms, pass all filters
+        response = await adminApi.getAllPrograms(params);
+      }
+      
+      console.log('Programs response:', response.data);
+      setPrograms(response.data.content);
+    } catch (error) {
+      console.error('Failed to fetch programs:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load programs"
+      });
+    }
+  };
+
+  // Fetch analytics data
+  const fetchAnalytics = async () => {
+    try {
+      console.log('Fetching analytics data...');
+      const response = await adminApi.getDashboardAnalytics();
+      console.log('Analytics response:', response.data);
+      setAnalytics(response.data);
+    } catch (error) {
+      console.error('Failed to fetch analytics:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load analytics data"
+      });
+    }
+  };
+
+  // Load data on component mount
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      console.log('Loading admin dashboard data...');
+      try {
+        await Promise.all([
+          fetchStats(),
+          fetchUsers(),
+          fetchInstructors(),
+          fetchPrograms(),
+          fetchAnalytics()
+        ]);
+        console.log('All data loaded successfully');
+      } catch (error) {
+        console.error('Error loading admin dashboard data:', error);
+      }
+      setLoading(false);
+    };
+    loadData();
+  }, []);
+
+  // Refetch users when search or role filter changes
+  useEffect(() => {
+    if (!loading) {
+      fetchUsers();
+    }
+  }, [searchTerm, selectedRole, currentPage]);
+
+  // Refetch programs when search or filter changes
+  useEffect(() => {
+    if (!loading) {
+      fetchPrograms();
+    }
+  }, [programSearchTerm, selectedCategory, selectedDifficulty, selectedStatus]);
+
+  // Handle user status update
+  const handleUserStatusUpdate = async (userId: number, isActive: boolean) => {
+    try {
+      await adminApi.updateUserStatus(userId, isActive);
+      toast({
+        title: "Success",
+        description: `User ${isActive ? 'activated' : 'deactivated'} successfully`
+      });
+      fetchUsers(); // Refresh the list
+    } catch (error) {
+      console.error('Failed to update user status:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update user status"
+      });
+    }
+  };
+
+  // Handle user role update
+  const handleUserRoleUpdate = async (userId: number, role: string) => {
+    try {
+      await adminApi.updateUserRole(userId, role);
+      toast({
+        title: "Success",
+        description: "User role updated successfully"
+      });
+      fetchUsers(); // Refresh the list
+    } catch (error) {
+      console.error('Failed to update user role:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update user role"
+      });
+    }
+  };
+
+  // Handle user deletion
+  const handleUserDelete = async (userId: number) => {
+    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      await adminApi.deleteUser(userId);
+      toast({
+        title: "Success",
+        description: "User deleted successfully"
+      });
+      fetchUsers(); // Refresh the list
+    } catch (error) {
+      console.error('Failed to delete user:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete user"
+      });
+    }
+  };
+
+  // Handle program deletion
+  const handleProgramDelete = async (programId: number) => {
+    if (!confirm('Are you sure you want to delete this program? This action cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      await adminApi.deleteProgram(programId);
+      toast({
+        title: "Success",
+        description: "Program deleted successfully"
+      });
+      fetchPrograms(); // Refresh the list
+    } catch (error) {
+      console.error('Failed to delete program:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete program"
+      });
+    }
+  };
+
+  // Handle program status update
+  const handleProgramStatusUpdate = async (programId: number, isActive: boolean) => {
+    try {
+      await adminApi.activateProgram(programId, isActive);
+      toast({
+        title: "Success",
+        description: `Program ${isActive ? 'activated' : 'deactivated'} successfully`
+      });
+      
+      // Update the local state immediately for better UX
+      setPrograms(prevPrograms => 
+        prevPrograms.map(program => 
+          program.id === programId 
+            ? { ...program, isActive: isActive, status: isActive ? 'ACTIVE' : 'INACTIVE' }
+            : program
+        )
+      );
+      
+      // Also refresh analytics to show updated counts
+      fetchAnalytics();
+    } catch (error) {
+      console.error('Failed to update program status:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update program status"
+      });
+    }
+  };
+
+  // System stats configuration
+  const systemStats = stats ? [
+    { title: "Total Users", value: stats.totalUsers.toString(), change: `+${stats.newUsersThisMonth}`, icon: Users, color: "text-primary" },
+    { title: "Active Programs", value: stats.totalPrograms.toString(), change: `+${stats.newProgramsThisMonth}`, icon: BookOpen, color: "text-blue-400" },
+    { title: "Monthly Revenue", value: `$${stats.monthlyRevenue.toLocaleString()}`, change: "+22%", icon: DollarSign, color: "text-green-400" },
     { title: "System Health", value: "99.2%", change: "+0.1%", icon: Activity, color: "text-green-400" },
-  ];
-
-  const allUsers = [
-    { 
-      id: 1,
-      name: "Sarah Johnson", 
-      email: "sarah@example.com", 
-      role: "Student", 
-      status: "active", 
-      joined: "2024-01-15",
-      lastActive: "2 hours ago",
-      phone: "+1 (555) 123-4567",
-      programs: 3,
-      totalSpent: "$450"
-    },
-    { 
-      id: 2,
-      name: "Jessica Wilson", 
-      email: "jessica@example.com", 
-      role: "Instructor", 
-      status: "active", 
-      joined: "2023-11-20",
-      lastActive: "30 min ago",
-      phone: "+1 (555) 987-6543",
-      programs: 8,
-      totalEarned: "$12,450"
-    },
-    { 
-      id: 3,
-      name: "Mike Chen", 
-      email: "mike@example.com", 
-      role: "Student", 
-      status: "pending", 
-      joined: "2024-01-22",
-      lastActive: "1 day ago",
-      phone: "+1 (555) 456-7890",
-      programs: 1,
-      totalSpent: "$120"
-    },
-    { 
-      id: 4,
-      name: "David Miller", 
-      email: "david@example.com", 
-      role: "Instructor", 
-      status: "active", 
-      joined: "2023-09-15",
-      lastActive: "4 hours ago",
-      phone: "+1 (555) 321-0987",
-      programs: 6,
-      totalEarned: "$8,230"
-    },
-  ];
-
-  const allPrograms = [
-    {
-      id: 1,
-      name: "HIIT Transformation",
-      instructor: "Jessica Wilson",
-      students: 45,
-      revenue: "$5,250",
-      rating: 4.9,
-      status: "active",
-      created: "2023-12-01",
-      duration: "8 weeks"
-    },
-    {
-      id: 2,
-      name: "Strength Building",
-      instructor: "David Miller",
-      students: 32,
-      revenue: "$3,980",
-      rating: 4.7,
-      status: "active",
-      created: "2023-11-15",
-      duration: "12 weeks"
-    },
-    {
-      id: 3,
-      name: "Yoga Flow",
-      instructor: "Lisa Zhang",
-      students: 28,
-      revenue: "$2,840",
-      rating: 4.8,
-      status: "review",
-      created: "2024-01-10",
-      duration: "6 weeks"
-    },
-  ];
+  ] : [];
 
   const systemAlerts = [
     { type: "warning", message: "High server load detected", time: "5 min ago", severity: "medium" },
@@ -149,23 +361,55 @@ export const AdminDashboard = () => {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'active': return <Badge variant="default">Active</Badge>;
-      case 'pending': return <Badge variant="secondary">Pending</Badge>;
-      case 'suspended': return <Badge variant="destructive">Suspended</Badge>;
-      case 'review': return <Badge variant="secondary">Under Review</Badge>;
-      default: return <Badge variant="secondary">{status}</Badge>;
-    }
+  const getStatusBadge = (isActivated: boolean) => {
+    return isActivated ? 
+      <Badge variant="default">Active</Badge> : 
+      <Badge variant="secondary">Inactive</Badge>;
   };
 
   const getRoleIcon = (role: string) => {
     switch (role) {
-      case 'Instructor': return <GraduationCap className="h-4 w-4" />;
-      case 'Admin': return <Crown className="h-4 w-4" />;
+      case 'INSTRUCTOR': return <GraduationCap className="h-4 w-4" />;
+      case 'ADMIN': return <Crown className="h-4 w-4" />;
       default: return <Users className="h-4 w-4" />;
     }
   };
+
+  const getRoleDisplayName = (role: string) => {
+    switch (role) {
+      case 'INSTRUCTOR': return 'Instructor';
+      case 'ADMIN': return 'Admin';
+      case 'USER': return 'User';
+      default: return role;
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  const getAvatarUrl = (user: AdminUserResponse) => {
+    if (user.avatarUrl) {
+      return user.avatarUrl;
+    }
+    // Fallback to generated avatar based on username
+    return `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`;
+  };
+
+  const getInitials = (user: AdminUserResponse) => {
+    return `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase();
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex items-center gap-2">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Loading admin dashboard...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -231,12 +475,23 @@ export const AdminDashboard = () => {
             <div className="flex items-center gap-4 flex-1">
               <div className="relative flex-1 max-w-sm">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search users..." className="pl-9" />
+                <Input 
+                  placeholder="Search users..." 
+                  className="pl-9"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                Filter
-              </Button>
+              <select 
+                className="px-3 py-2 border border-border rounded-md bg-background text-foreground"
+                value={selectedRole}
+                onChange={(e) => setSelectedRole(e.target.value)}
+              >
+                <option value="">All Roles</option>
+                <option value="USER">Users</option>
+                <option value="INSTRUCTOR">Instructors</option>
+                <option value="ADMIN">Admins</option>
+              </select>
             </div>
             <Button variant="fitness" size="sm">
               <UserPlus className="h-4 w-4 mr-2" />
@@ -245,85 +500,116 @@ export const AdminDashboard = () => {
           </div>
 
           <div className="grid gap-6">
-            {allUsers.map((user) => (
-              <Card key={user.id} variant="neumorphic" className="hover:shadow-glow transition-all duration-300">
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <Avatar className="h-16 w-16">
-                      <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`} />
-                      <AvatarFallback>{user.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                    </Avatar>
-                    
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <h3 className="text-lg font-semibold">{user.name}</h3>
-                          <div className="flex items-center gap-2 mb-1">
-                            {getRoleIcon(user.role)}
-                            <span className="text-sm text-muted-foreground">{user.role}</span>
-                          </div>
-                          {getStatusBadge(user.status)}
-                        </div>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
-                              <Eye className="h-4 w-4 mr-2" />
-                              View Profile
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <Edit className="h-4 w-4 mr-2" />
-                              Edit User
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <Mail className="h-4 w-4 mr-2" />
-                              Send Message
-                            </DropdownMenuItem>
-                            {user.status === 'active' ? (
-                              <DropdownMenuItem className="text-destructive">
-                                <Ban className="h-4 w-4 mr-2" />
-                                Suspend User
-                              </DropdownMenuItem>
-                            ) : (
-                              <DropdownMenuItem>
-                                <UserCheck className="h-4 w-4 mr-2" />
-                                Activate User
-                              </DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Mail className="h-4 w-4 text-muted-foreground" />
-                          <span>{user.email}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <Phone className="h-4 w-4 text-muted-foreground" />
-                          <span>{user.phone}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <BookOpen className="h-4 w-4 text-muted-foreground" />
-                          <span>{user.programs} programs</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-6 text-xs text-muted-foreground">
-                        <span>Joined: {new Date(user.joined).toLocaleDateString()}</span>
-                        <span>Last active: {user.lastActive}</span>
-                        {user.totalSpent && <span className="text-green-400">Spent: {user.totalSpent}</span>}
-                        {user.totalEarned && <span className="text-green-400">Earned: {user.totalEarned}</span>}
-                      </div>
-                    </div>
-                  </div>
+            {users.length === 0 ? (
+              <Card variant="neumorphic">
+                <CardContent className="p-8 text-center">
+                  <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No users found</h3>
+                  <p className="text-muted-foreground">
+                    {searchTerm || selectedRole ? 'Try adjusting your search criteria.' : 'No users have been registered yet.'}
+                  </p>
                 </CardContent>
               </Card>
-            ))}
+            ) : (
+              users.map((user) => (
+                <Card key={user.id} variant="neumorphic" className="hover:shadow-glow transition-all duration-300">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      <Avatar className="h-16 w-16">
+                        <AvatarImage src={getAvatarUrl(user)} />
+                        <AvatarFallback>{getInitials(user)}</AvatarFallback>
+                      </Avatar>
+                      
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <h3 className="text-lg font-semibold">
+                              {user.firstName} {user.lastName}
+                            </h3>
+                            <div className="flex items-center gap-2 mb-1">
+                              {getRoleIcon(user.role)}
+                              <span className="text-sm text-muted-foreground">
+                                {getRoleDisplayName(user.role)}
+                              </span>
+                            </div>
+                            {getStatusBadge(user.isActivated)}
+                          </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem>
+                                <Eye className="h-4 w-4 mr-2" />
+                                View Profile
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit User
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                <Mail className="h-4 w-4 mr-2" />
+                                Send Message
+                              </DropdownMenuItem>
+                              {user.isActivated ? (
+                                <DropdownMenuItem 
+                                  className="text-destructive"
+                                  onClick={() => handleUserStatusUpdate(user.id, false)}
+                                >
+                                  <Ban className="h-4 w-4 mr-2" />
+                                  Deactivate User
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem
+                                  onClick={() => handleUserStatusUpdate(user.id, true)}
+                                >
+                                  <UserCheck className="h-4 w-4 mr-2" />
+                                  Activate User
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem 
+                                className="text-destructive"
+                                onClick={() => handleUserDelete(user.id)}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete User
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                          <div className="flex items-center gap-2 text-sm">
+                            <Mail className="h-4 w-4 text-muted-foreground" />
+                            <span>{user.email}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm">
+                            <Users className="h-4 w-4 text-muted-foreground" />
+                            <span>@{user.username}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm">
+                            <BookOpen className="h-4 w-4 text-muted-foreground" />
+                            <span>{user.programCount} programs</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-6 text-xs text-muted-foreground">
+                          <span>Joined: {formatDate(user.createdAt)}</span>
+                          {user.lastLoginAt && (
+                            <span>Last login: {formatDate(user.lastLoginAt)}</span>
+                          )}
+                          {user.cityName && (
+                            <span>Location: {user.cityName}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </div>
         </TabsContent>
 
@@ -335,10 +621,6 @@ export const AdminDashboard = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input placeholder="Search instructors..." className="pl-9" />
               </div>
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                Filter
-              </Button>
             </div>
             <Button variant="fitness" size="sm">
               <UserPlus className="h-4 w-4 mr-2" />
@@ -347,193 +629,360 @@ export const AdminDashboard = () => {
           </div>
 
           <div className="grid gap-6">
-            {allUsers.filter(user => user.role === 'Instructor').map((instructor) => (
-              <Card key={instructor.id} variant="neumorphic" className="hover:shadow-glow transition-all duration-300">
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <Avatar className="h-20 w-20">
-                      <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${instructor.name}`} />
-                      <AvatarFallback>{instructor.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                    </Avatar>
-                    
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <h3 className="text-xl font-semibold">{instructor.name}</h3>
-                          <div className="flex items-center gap-2 mb-2">
-                            <GraduationCap className="h-4 w-4" />
-                            <span className="text-sm text-muted-foreground">Certified Instructor</span>
-                          </div>
-                          {getStatusBadge(instructor.status)}
-                        </div>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
-                              <Eye className="h-4 w-4 mr-2" />
-                              View Profile
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <BookOpen className="h-4 w-4 mr-2" />
-                              View Programs
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <BarChart3 className="h-4 w-4 mr-2" />
-                              View Analytics
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <Edit className="h-4 w-4 mr-2" />
-                              Edit Profile
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
+            {instructors.length === 0 ? (
+              <Card variant="neumorphic">
+                <CardContent className="p-8 text-center">
+                  <GraduationCap className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No instructors found</h3>
+                  <p className="text-muted-foreground">
+                    No instructors have been registered yet.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              instructors.map((instructor) => (
+                <Card key={instructor.id} variant="neumorphic" className="hover:shadow-glow transition-all duration-300">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      <Avatar className="h-20 w-20">
+                        <AvatarImage src={getAvatarUrl(instructor)} />
+                        <AvatarFallback>{getInitials(instructor)}</AvatarFallback>
+                      </Avatar>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                        <div className="text-center p-3 bg-background/50 rounded-lg">
-                          <div className="text-lg font-semibold text-primary">{instructor.programs}</div>
-                          <div className="text-xs text-muted-foreground">Programs</div>
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between mb-4">
+                          <div>
+                            <h3 className="text-xl font-semibold">
+                              {instructor.firstName} {instructor.lastName}
+                            </h3>
+                            <div className="flex items-center gap-2 mb-2">
+                              <GraduationCap className="h-4 w-4" />
+                              <span className="text-sm text-muted-foreground">Certified Instructor</span>
+                            </div>
+                            {getStatusBadge(instructor.isActivated)}
+                          </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem>
+                                <Eye className="h-4 w-4 mr-2" />
+                                View Profile
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                <BookOpen className="h-4 w-4 mr-2" />
+                                View Programs
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                <BarChart3 className="h-4 w-4 mr-2" />
+                                View Analytics
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit Profile
+                              </DropdownMenuItem>
+                              {instructor.isActivated ? (
+                                <DropdownMenuItem 
+                                  className="text-destructive"
+                                  onClick={() => handleUserStatusUpdate(instructor.id, false)}
+                                >
+                                  <Ban className="h-4 w-4 mr-2" />
+                                  Deactivate Instructor
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem
+                                  onClick={() => handleUserStatusUpdate(instructor.id, true)}
+                                >
+                                  <UserCheck className="h-4 w-4 mr-2" />
+                                  Activate Instructor
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
-                        <div className="text-center p-3 bg-background/50 rounded-lg">
-                          <div className="text-lg font-semibold text-green-400">{instructor.totalEarned}</div>
-                          <div className="text-xs text-muted-foreground">Total Earned</div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                          <div className="text-center p-3 bg-background/50 rounded-lg">
+                            <div className="text-lg font-semibold text-primary">{instructor.programCount}</div>
+                            <div className="text-xs text-muted-foreground">Programs</div>
+                          </div>
+                          <div className="text-center p-3 bg-background/50 rounded-lg">
+                            <div className="text-lg font-semibold text-green-400">{instructor.enrollmentCount}</div>
+                            <div className="text-xs text-muted-foreground">Total Enrollments</div>
+                          </div>
+                          <div className="text-center p-3 bg-background/50 rounded-lg">
+                            <div className="text-lg font-semibold">4.8</div>
+                            <div className="text-xs text-muted-foreground">Avg Rating</div>
+                          </div>
+                          <div className="text-center p-3 bg-background/50 rounded-lg">
+                            <div className="text-lg font-semibold">{instructor.activityCount}</div>
+                            <div className="text-xs text-muted-foreground">Activities</div>
+                          </div>
                         </div>
-                        <div className="text-center p-3 bg-background/50 rounded-lg">
-                          <div className="text-lg font-semibold">4.8</div>
-                          <div className="text-xs text-muted-foreground">Avg Rating</div>
-                        </div>
-                        <div className="text-center p-3 bg-background/50 rounded-lg">
-                          <div className="text-lg font-semibold">156</div>
-                          <div className="text-xs text-muted-foreground">Students</div>
-                        </div>
-                      </div>
 
-                      <div className="flex items-center gap-6 text-xs text-muted-foreground">
-                        <span>Joined: {new Date(instructor.joined).toLocaleDateString()}</span>
-                        <span>Last active: {instructor.lastActive}</span>
-                        <div className="flex items-center gap-1">
-                          <Mail className="h-3 w-3" />
-                          <span>{instructor.email}</span>
+                        <div className="flex items-center gap-6 text-xs text-muted-foreground">
+                          <span>Joined: {formatDate(instructor.createdAt)}</span>
+                          {instructor.lastLoginAt && (
+                            <span>Last login: {formatDate(instructor.lastLoginAt)}</span>
+                          )}
+                          <div className="flex items-center gap-1">
+                            <Mail className="h-3 w-3" />
+                            <span>{instructor.email}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </div>
         </TabsContent>
 
         {/* Programs Tab */}
         <TabsContent value="programs" className="space-y-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex items-center gap-4 flex-1">
-              <div className="relative flex-1 max-w-sm">
+            <div className="flex items-center gap-4 flex-1 flex-wrap">
+              <div className="relative flex-1 max-w-sm min-w-[200px]">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search programs..." className="pl-9" />
+                <Input 
+                  placeholder="Search programs..." 
+                  className="pl-9"
+                  value={programSearchTerm}
+                  onChange={(e) => setProgramSearchTerm(e.target.value)}
+                />
               </div>
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                Filter
-              </Button>
+              <Select value={selectedCategory || "all"} onValueChange={(value) => setSelectedCategory(value === "all" ? "" : value)}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="Cardio">Cardio</SelectItem>
+                  <SelectItem value="Strength Training">Strength Training</SelectItem>
+                  <SelectItem value="Yoga">Yoga</SelectItem>
+                  <SelectItem value="Pilates">Pilates</SelectItem>
+                  <SelectItem value="CrossFit">CrossFit</SelectItem>
+                  <SelectItem value="Swimming">Swimming</SelectItem>
+                  <SelectItem value="Running">Running</SelectItem>
+                  <SelectItem value="Dance">Dance</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Select value={selectedDifficulty || "all"} onValueChange={(value) => setSelectedDifficulty(value === "all" ? "" : value)}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="All Difficulties" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Difficulties</SelectItem>
+                  <SelectItem value="BEGINNER">Beginner</SelectItem>
+                  <SelectItem value="INTERMEDIATE">Intermediate</SelectItem>
+                  <SelectItem value="ADVANCED">Advanced</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Select value={selectedStatus || "all"} onValueChange={(value) => setSelectedStatus(value === "all" ? "" : value)}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Pending</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              {/* Clear Filters Button */}
+              {(selectedCategory || selectedDifficulty || selectedStatus || programSearchTerm) && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    setSelectedCategory("");
+                    setSelectedDifficulty("");
+                    setSelectedStatus("");
+                    setProgramSearchTerm("");
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <XCircle className="h-4 w-4" />
+                  Clear Filters
+                </Button>
+              )}
             </div>
           </div>
 
-          <div className="grid gap-6">
-            {allPrograms.map((program) => (
-              <Card key={program.id} variant="neumorphic" className="hover:shadow-glow transition-all duration-300">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
-                        <h3 className="text-xl font-semibold">{program.name}</h3>
-                        {getStatusBadge(program.status)}
-                      </div>
-                      
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Instructor: <span className="font-medium">{program.instructor}</span>
-                      </p>
-                      
-                      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
-                        <div className="text-center p-3 bg-background/50 rounded-lg">
-                          <div className="text-lg font-semibold">{program.students}</div>
-                          <div className="text-xs text-muted-foreground">Students</div>
-                        </div>
-                        <div className="text-center p-3 bg-background/50 rounded-lg">
-                          <div className="text-lg font-semibold text-green-400">{program.revenue}</div>
-                          <div className="text-xs text-muted-foreground">Revenue</div>
-                        </div>
-                        <div className="text-center p-3 bg-background/50 rounded-lg">
-                          <div className="text-lg font-semibold">{program.rating}</div>
-                          <div className="text-xs text-muted-foreground">Rating</div>
-                        </div>
-                        <div className="text-center p-3 bg-background/50 rounded-lg">
-                          <div className="text-lg font-semibold">{program.duration}</div>
-                          <div className="text-xs text-muted-foreground">Duration</div>
-                        </div>
-                        <div className="text-center p-3 bg-background/50 rounded-lg">
-                          <div className="text-xs font-medium">{new Date(program.created).toLocaleDateString()}</div>
-                          <div className="text-xs text-muted-foreground">Created</div>
-                        </div>
-                      </div>
+          {/* Active Filters Summary */}
+          {(selectedCategory || selectedDifficulty || selectedStatus || programSearchTerm) && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm text-muted-foreground">Active filters:</span>
+              {programSearchTerm && (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  <Search className="h-3 w-3" />
+                  Search: "{programSearchTerm}"
+                </Badge>
+              )}
+              {selectedCategory && (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  <BookOpen className="h-3 w-3" />
+                  Category: {selectedCategory}
+                </Badge>
+              )}
+              {selectedDifficulty && (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  <Activity className="h-3 w-3" />
+                  Difficulty: {selectedDifficulty}
+                </Badge>
+              )}
+              {selectedStatus && (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  {selectedStatus === 'active' ? (
+                    <CheckCircle className="h-3 w-3 text-green-500" />
+                  ) : (
+                    <Clock className="h-3 w-3 text-yellow-500" />
+                  )}
+                  Status: {selectedStatus === 'active' ? 'Active' : 'Pending'}
+                </Badge>
+              )}
+            </div>
+          )}
 
-                      <div className="flex items-center gap-2">
-                        <Button size="sm" variant="fitness">
-                          <Eye className="h-4 w-4 mr-2" />
-                          View Details
-                        </Button>
-                        <Button size="sm" variant="outline">
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit
-                        </Button>
-                        <Button size="sm" variant="outline">
-                          <BarChart3 className="h-4 w-4 mr-2" />
-                          Analytics
-                        </Button>
-                        {program.status === 'review' && (
-                          <>
-                            <Button size="sm" variant="default">
-                              <CheckCircle className="h-4 w-4 mr-2" />
-                              Approve
-                            </Button>
-                            <Button size="sm" variant="destructive">
-                              <XCircle className="h-4 w-4 mr-2" />
-                              Reject
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Users className="h-4 w-4 mr-2" />
-                          Manage Students
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Download className="h-4 w-4 mr-2" />
-                          Export Data
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete Program
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
+          {/* Results Summary */}
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              Showing {programs.length} program{programs.length !== 1 ? 's' : ''}
+              {(selectedCategory || selectedDifficulty || selectedStatus || programSearchTerm) && ' (filtered)'}
+            </p>
+          </div>
+
+          <div className="grid gap-6">
+            {programs.length === 0 ? (
+              <Card variant="neumorphic">
+                <CardContent className="p-8 text-center">
+                  <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No programs found</h3>
+                  <p className="text-muted-foreground">
+                    {programSearchTerm || selectedCategory || selectedDifficulty ? 'Try adjusting your search criteria.' : 'No programs have been created yet.'}
+                  </p>
                 </CardContent>
               </Card>
-            ))}
+            ) : (
+              programs.map((program) => (
+                <Card key={program.id} variant="neumorphic" className="hover:shadow-glow transition-all duration-300">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="w-20 h-20 bg-gradient-primary rounded-lg flex items-center justify-center">
+                        <BookOpen className="h-8 w-8 text-white" />
+                      </div>
+                      
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="text-lg font-semibold">
+                                {program.name}
+                              </h3>
+                              <span className={`px-2 py-1 text-xs rounded-full font-medium ${
+                                program.isActive 
+                                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                                  : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                              }`}>
+                                {program.isActive ? 'Active' : 'Pending'}
+                              </span>
+                            </div>
+                            <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+                              {program.description}
+                            </p>
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <GraduationCap className="h-4 w-4" />
+                                {program.instructorName}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <BookOpen className="h-4 w-4" />
+                                {program.categoryName}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Activity className="h-4 w-4" />
+                                {program.difficultyLevel}
+                              </span>
+                            </div>
+                          </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem>
+                                <Eye className="h-4 w-4 mr-2" />
+                                View Details
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit Program
+                              </DropdownMenuItem>
+                              {program.isActive ? (
+                                <DropdownMenuItem 
+                                  className="text-destructive"
+                                  onClick={() => handleProgramStatusUpdate(program.id, false)}
+                                >
+                                  <Ban className="h-4 w-4 mr-2" />
+                                  Deactivate Program
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem
+                                  onClick={() => handleProgramStatusUpdate(program.id, true)}
+                                >
+                                  <UserCheck className="h-4 w-4 mr-2" />
+                                  Activate Program
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem 
+                                className="text-destructive"
+                                onClick={() => handleProgramDelete(program.id)}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete Program
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                          <div className="text-center p-3 bg-background/50 rounded-lg">
+                            <div className="text-lg font-semibold text-primary">{program.duration}</div>
+                            <div className="text-xs text-muted-foreground">Minutes</div>
+                          </div>
+                          <div className="text-center p-3 bg-background/50 rounded-lg">
+                            <div className="text-lg font-semibold text-green-400">${program.price}</div>
+                            <div className="text-xs text-muted-foreground">Price</div>
+                          </div>
+                          <div className="text-center p-3 bg-background/50 rounded-lg">
+                            <div className="text-lg font-semibold text-blue-400">{program.enrollmentCount}</div>
+                            <div className="text-xs text-muted-foreground">Enrollments</div>
+                          </div>
+                          <div className="text-center p-3 bg-background/50 rounded-lg">
+                            <div className="text-lg font-semibold text-purple-400">{program.commentCount}</div>
+                            <div className="text-xs text-muted-foreground">Comments</div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-6 text-xs text-muted-foreground">
+                          <span>Created: {formatDate(program.createdAt)}</span>
+                          <span>Location: {program.locationName}</span>
+                          <span>Status: {program.status}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </div>
         </TabsContent>
 
@@ -633,82 +1082,291 @@ export const AdminDashboard = () => {
 
         {/* Analytics Tab */}
         <TabsContent value="analytics" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card variant="neumorphic">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <DollarSign className="h-5 w-5 text-primary" />
-                  Revenue Analytics
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">This Month</span>
-                    <span className="font-semibold text-green-400">$45,230</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Last Month</span>
-                    <span className="font-semibold">$37,150</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Growth</span>
-                    <span className="font-semibold text-green-400">+22%</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+          {analytics ? (
+            <>
+              {/* Overview Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                <Card variant="neumorphic">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <DollarSign className="h-5 w-5 text-primary" />
+                      Total Revenue
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-green-400">
+                      ${analytics.totalRevenue.toLocaleString()}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      This month: ${analytics.revenueThisMonth.toLocaleString()}
+                    </div>
+                  </CardContent>
+                </Card>
 
-            <Card variant="neumorphic">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5 text-primary" />
-                  User Analytics
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Total Users</span>
-                    <span className="font-semibold">2,547</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">New This Month</span>
-                    <span className="font-semibold text-green-400">+148</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Active Rate</span>
-                    <span className="font-semibold">94%</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                <Card variant="neumorphic">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="h-5 w-5 text-blue-400" />
+                      User Growth
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-blue-400">
+                      {analytics.newUsersThisMonth}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      New users this month
+                    </div>
+                  </CardContent>
+                </Card>
 
+                <Card variant="neumorphic">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <BookOpen className="h-5 w-5 text-purple-400" />
+                      Program Growth
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-purple-400">
+                      {analytics.newProgramsThisMonth}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      New programs this month
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card variant="neumorphic">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Activity className="h-5 w-5 text-orange-400" />
+                      Enrollments
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-orange-400">
+                      {analytics.newEnrollmentsThisMonth}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      New enrollments this month
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card variant="neumorphic">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <BookOpen className="h-5 w-5 text-green-400" />
+                      Active Programs
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-green-400">
+                      {analytics.activePrograms}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {analytics.inactivePrograms} pending activation
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Charts Section */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* User Growth Chart */}
+                <Card variant="neumorphic">
+                  <CardHeader>
+                    <CardTitle>User Growth (Last 7 Days)</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {analytics.userGrowthChart.map((point, index) => (
+                        <div key={index} className="flex items-center justify-between">
+                          <span className="text-sm">{point.label}</span>
+                          <div className="flex items-center gap-2">
+                            <div className="w-20 bg-background rounded-full h-2">
+                              <div 
+                                className="bg-primary h-2 rounded-full" 
+                                style={{ width: `${Math.min((point.value / Math.max(...analytics.userGrowthChart.map(p => p.value))) * 100, 100)}%` }}
+                              ></div>
+                            </div>
+                            <span className="text-sm font-medium w-12 text-right">{point.value}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Program Enrollments Chart */}
+                <Card variant="neumorphic">
+                  <CardHeader>
+                    <CardTitle>Program Enrollments (Last 7 Days)</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {analytics.programEnrollmentChart.map((point, index) => (
+                        <div key={index} className="flex items-center justify-between">
+                          <span className="text-sm">{point.label}</span>
+                          <div className="flex items-center gap-2">
+                            <div className="w-20 bg-background rounded-full h-2">
+                              <div 
+                                className="bg-blue-400 h-2 rounded-full" 
+                                style={{ width: `${Math.min((point.value / Math.max(...analytics.programEnrollmentChart.map(p => p.value))) * 100, 100)}%` }}
+                              ></div>
+                            </div>
+                            <span className="text-sm font-medium w-12 text-right">{point.value}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Category and Difficulty Distribution */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Category Distribution */}
+                <Card variant="neumorphic">
+                  <CardHeader>
+                    <CardTitle>Program Categories</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {analytics.categoryDistribution.map((category, index) => (
+                        <div key={index} className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium">{category.category}</span>
+                            <span className="text-sm text-muted-foreground">{category.count} programs</span>
+                          </div>
+                          <div className="w-full bg-background rounded-full h-2">
+                            <div 
+                              className="bg-gradient-primary h-2 rounded-full" 
+                              style={{ width: `${category.percentage}%` }}
+                            ></div>
+                          </div>
+                          <div className="text-xs text-muted-foreground text-right">
+                            {category.percentage.toFixed(1)}%
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Difficulty Distribution */}
+                <Card variant="neumorphic">
+                  <CardHeader>
+                    <CardTitle>Difficulty Levels</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {analytics.difficultyDistribution.map((difficulty, index) => (
+                        <div key={index} className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium">{difficulty.difficulty}</span>
+                            <span className="text-sm text-muted-foreground">{difficulty.count} programs</span>
+                          </div>
+                          <div className="w-full bg-background rounded-full h-2">
+                            <div 
+                              className="bg-gradient-to-r from-green-400 to-red-400 h-2 rounded-full" 
+                              style={{ width: `${difficulty.percentage}%` }}
+                            ></div>
+                          </div>
+                          <div className="text-xs text-muted-foreground text-right">
+                            {difficulty.percentage.toFixed(1)}%
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Top Performers */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Top Instructors */}
+                <Card variant="neumorphic">
+                  <CardHeader>
+                    <CardTitle>Top Instructors</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {analytics.topInstructors.map((instructor, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-background/50 rounded-lg">
+                          <div>
+                            <div className="font-medium">{instructor.name}</div>
+                            <div className="text-sm text-muted-foreground">{instructor.email}</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm font-medium">{instructor.programCount} programs</div>
+                            <div className="text-xs text-muted-foreground">{instructor.enrollmentCount} enrollments</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Top Programs */}
+                <Card variant="neumorphic">
+                  <CardHeader>
+                    <CardTitle>Top Programs</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {analytics.topPrograms.map((program, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-background/50 rounded-lg">
+                          <div>
+                            <div className="font-medium">{program.name}</div>
+                            <div className="text-sm text-muted-foreground">{program.instructorName}</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm font-medium">{program.enrollmentCount} enrollments</div>
+                            <div className="text-xs text-muted-foreground">${program.revenue}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* System Health */}
+              <Card variant="neumorphic">
+                <CardHeader>
+                  <CardTitle>System Health</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-400">{analytics.systemHealth.serverUptime}%</div>
+                      <div className="text-sm text-muted-foreground">Server Uptime</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-400">{analytics.systemHealth.activeUsers}</div>
+                      <div className="text-sm text-muted-foreground">Active Users</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-purple-400">{analytics.systemHealth.averageResponseTime}ms</div>
+                      <div className="text-sm text-muted-foreground">Avg Response Time</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          ) : (
             <Card variant="neumorphic">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BookOpen className="h-5 w-5 text-primary" />
-                  Program Analytics
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Total Programs</span>
-                    <span className="font-semibold">89</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">New This Month</span>
-                    <span className="font-semibold text-green-400">+7</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Avg Completion</span>
-                    <span className="font-semibold">85%</span>
-                  </div>
-                </div>
+              <CardContent className="p-8 text-center">
+                <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Loading Analytics</h3>
+                <p className="text-muted-foreground">
+                  Fetching real-time analytics data...
+                </p>
               </CardContent>
             </Card>
-          </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>

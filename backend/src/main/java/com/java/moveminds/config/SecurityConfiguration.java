@@ -72,6 +72,27 @@ public class SecurityConfiguration {
                         // Instructor endpoints - Instructors and admins
                         .requestMatchers("/instructor/**").hasAnyRole("INSTRUCTOR", "ADMIN") // Instructor management
                         
+                        // Enhanced admin user management endpoints
+                        .requestMatchers(HttpMethod.GET, "/admin/users/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/admin/users/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/admin/users/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/admin/users/**").hasRole("ADMIN")
+                        
+                        // Enhanced admin system management endpoints
+                        .requestMatchers("/admin/system/**").hasRole("ADMIN")
+                        
+                        // Enhanced instructor program management endpoints
+                        .requestMatchers(HttpMethod.GET, "/instructor/programs/**").hasAnyRole("INSTRUCTOR", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/instructor/programs/**").hasAnyRole("INSTRUCTOR", "ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/instructor/programs/**").hasAnyRole("INSTRUCTOR", "ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/instructor/programs/**").hasAnyRole("INSTRUCTOR", "ADMIN")
+                        
+                        // Enhanced instructor student management endpoints
+                        .requestMatchers("/instructor/students/**").hasAnyRole("INSTRUCTOR", "ADMIN")
+                        
+                        // Enhanced instructor dashboard endpoints
+                        .requestMatchers("/instructor/dashboard/**").hasAnyRole("INSTRUCTOR", "ADMIN")
+                        
                         // User endpoints - Authenticated users
                         .requestMatchers(HttpMethod.GET, "/user/**").permitAll() // Public user info
                         .requestMatchers("/user/**").authenticated() // User management

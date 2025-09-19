@@ -183,6 +183,122 @@ export interface AdminUserResponse {
   activityCount: number;
 }
 
+export interface AdminProgramResponse {
+  id: number;
+  name: string;
+  description: string;
+  difficultyLevel: string;
+  duration: number;
+  price: number;
+  youtubeUrl?: string;
+  createdAt: string;
+  instructorId: number;
+  instructorName: string;
+  instructorEmail: string;
+  categoryId: number;
+  categoryName: string;
+  locationId: number;
+  locationName: string;
+  enrollmentCount: number;
+  commentCount: number;
+  averageRating: number;
+  status: string;
+  imageUrl?: string;
+  isActive: boolean;
+}
+
+export interface ProgramActivationResponse {
+  programId: number;
+  programName: string;
+  isActive: boolean;
+  adminNotes?: string;
+  activationDate: string;
+  activatedBy: string;
+  message: string;
+  instructorName: string;
+  categoryName: string;
+  difficultyLevel: string;
+}
+
+export interface ProgramActivationStats {
+  totalPrograms: number;
+  activePrograms: number;
+  inactivePrograms: number;
+  pendingActivation: number;
+  activationRate: number;
+}
+
+// Analytics Types
+export interface ChartDataPoint {
+  label: string;
+  value: number;
+  date: string;
+}
+
+export interface CategoryDistribution {
+  category: string;
+  count: number;
+  percentage: number;
+}
+
+export interface DifficultyDistribution {
+  difficulty: string;
+  count: number;
+  percentage: number;
+}
+
+export interface TopInstructor {
+  id: number;
+  name: string;
+  email: string;
+  programCount: number;
+  enrollmentCount: number;
+  averageRating: number;
+  totalRevenue: number;
+}
+
+export interface TopProgram {
+  id: number;
+  name: string;
+  instructorName: string;
+  category: string;
+  enrollmentCount: number;
+  averageRating: number;
+  revenue: number;
+}
+
+export interface SystemHealthMetrics {
+  serverUptime: number;
+  activeUsers: number;
+  totalRequests: number;
+  averageResponseTime: number;
+  databaseStatus: string;
+  lastBackup: string;
+}
+
+export interface AdminAnalyticsResponse {
+  totalUsers: number;
+  totalInstructors: number;
+  totalPrograms: number;
+  activePrograms: number;
+  inactivePrograms: number;
+  totalEnrollments: number;
+  totalRevenue: number;
+  averageRating: number;
+  newUsersThisMonth: number;
+  newProgramsThisMonth: number;
+  newEnrollmentsThisMonth: number;
+  revenueThisMonth: number;
+  userGrowthChart: ChartDataPoint[];
+  programEnrollmentChart: ChartDataPoint[];
+  revenueChart: ChartDataPoint[];
+  categoryDistribution: CategoryDistribution[];
+  difficultyDistribution: DifficultyDistribution[];
+  topInstructors: TopInstructor[];
+  topPrograms: TopProgram[];
+  systemHealth: SystemHealthMetrics;
+}
+
 export interface AdminStatsResponse {
   totalUsers: number;
   totalInstructors: number;
@@ -360,14 +476,45 @@ export const adminApi = {
     api.get<PageResponse<AdminUserResponse>>('/admin/users', { params }),
   getUserById: (userId: number) => api.get<AdminUserResponse>(`/admin/users/${userId}`),
   updateUserRole: (userId: number, role: string) => 
-    api.put<AdminUserResponse>(`/admin/users/${userId}/role`, { role }),
+    api.put<AdminUserResponse>(`/admin/users/${userId}/role?newRole=${role}`),
   updateUserStatus: (userId: number, active: boolean) => 
-    api.put<AdminUserResponse>(`/admin/users/${userId}/status?active=${active}`),
+    api.put<AdminUserResponse>(`/admin/users/${userId}/status?isActive=${active}`),
   deleteUser: (userId: number) => api.delete(`/admin/users/${userId}`),
-  getAllInstructors: () => api.get<AdminUserResponse[]>('/admin/instructors'),
+  getAllInstructors: () => api.get<AdminUserResponse[]>('/admin/users/instructors'),
   promoteToInstructor: (userId: number) => api.post<AdminUserResponse>(`/admin/users/${userId}/promote-instructor`),
   demoteFromInstructor: (userId: number) => api.post<AdminUserResponse>(`/admin/users/${userId}/demote-instructor`),
   getSystemLogs: (limit?: number) => api.get<string[]>(`/admin/logs?limit=${limit || 100}`),
+  // Programs management
+  getAllPrograms: (params?: { page?: number; size?: number; search?: string; category?: string; difficulty?: string }) => 
+    api.get<PageResponse<AdminProgramResponse>>('/admin/programs', { params }),
+  getProgramById: (programId: number) => api.get<AdminProgramResponse>(`/admin/programs/${programId}`),
+  deleteProgram: (programId: number) => api.delete(`/admin/programs/${programId}`),
+  updateProgramStatus: (programId: number, isActive: boolean) => 
+    api.put<AdminProgramResponse>(`/admin/programs/${programId}/status?isActive=${isActive}`),
+  getProgramStatistics: () => api.get<Object>('/admin/programs/statistics'),
+  // Program activation management
+  activateProgram: (programId: number, isActive: boolean, adminNotes?: string) => 
+    api.post<ProgramActivationResponse>('/admin/programs/activation/toggle', {
+      programId,
+      isActive,
+      adminNotes
+    }),
+  getActivePrograms: (params?: { page?: number; size?: number; sortBy?: string; sortDir?: string }) => 
+    api.get<PageResponse<AdminProgramResponse>>('/admin/programs/activation/active', { params }),
+  getInactivePrograms: (params?: { page?: number; size?: number; sortBy?: string; sortDir?: string }) => 
+    api.get<PageResponse<AdminProgramResponse>>('/admin/programs/activation/inactive', { params }),
+  getProgramsPendingActivation: (params?: { page?: number; size?: number; sortBy?: string; sortDir?: string }) => 
+    api.get<PageResponse<AdminProgramResponse>>('/admin/programs/activation/pending', { params }),
+  getProgramActivationStats: () => api.get<ProgramActivationStats>('/admin/programs/activation/stats'),
+  // Analytics
+  getAnalyticsOverview: () => api.get<AdminAnalyticsResponse>('/admin/analytics/overview'),
+  getDashboardAnalytics: () => api.get<AdminAnalyticsResponse>('/admin/analytics/dashboard'),
+  getUserGrowthAnalytics: (startDate: string, endDate: string) => 
+    api.get<Object>(`/admin/analytics/user-growth?startDate=${startDate}&endDate=${endDate}`),
+  getProgramAnalytics: () => api.get<Object>('/admin/analytics/programs'),
+  getRevenueAnalytics: (startDate: string, endDate: string) => 
+    api.get<Object>(`/admin/analytics/revenue?startDate=${startDate}&endDate=${endDate}`),
+  getRealTimeMetrics: () => api.get<Object>('/admin/analytics/real-time'),
 };
 
 // Instructor API

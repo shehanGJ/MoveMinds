@@ -15,6 +15,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -38,17 +39,15 @@ public class AdminServiceImpl implements AdminService {
         // Additional stats would be calculated from other repositories
         return AdminStatsResponse.builder()
                 .totalUsers(totalUsers)
+                .activeUsers(userRepository.countByIsActivated(true))
                 .totalInstructors(totalInstructors)
                 .totalAdmins(totalAdmins)
                 .totalPrograms(0L) // TODO: Implement from FitnessProgramRepository
+                .activePrograms(0L) // TODO: Implement from FitnessProgramRepository
                 .totalEnrollments(0L) // TODO: Implement from UserProgramRepository
-                .totalActivities(0L) // TODO: Implement from ActivityRepository
-                .activeUsers(userRepository.countByIsActivated(true))
-                .inactiveUsers(userRepository.countByIsActivated(false))
-                .newUsersThisMonth(0L) // TODO: Implement date-based filtering
-                .newProgramsThisMonth(0L) // TODO: Implement date-based filtering
-                .totalRevenue(0L) // TODO: Implement revenue calculation
-                .monthlyRevenue(0L) // TODO: Implement monthly revenue calculation
+                .activeEnrollments(0L) // TODO: Implement from UserProgramRepository
+                .totalRevenue(BigDecimal.ZERO) // TODO: Implement revenue calculation
+                .monthlyRevenue(BigDecimal.ZERO) // TODO: Implement monthly revenue calculation
                 .build();
     }
 
@@ -206,9 +205,8 @@ public class AdminServiceImpl implements AdminService {
                 .cityName(user.getCity() != null ? user.getCity().getName() : null)
                 .createdAt(LocalDateTime.now()) // TODO: Add createdAt field to UserEntity
                 .lastLoginAt(LocalDateTime.now()) // TODO: Add lastLoginAt field to UserEntity
-                .programCount(user.getFitnessPrograms() != null ? user.getFitnessPrograms().size() : 0)
-                .enrollmentCount(user.getUserPrograms() != null ? user.getUserPrograms().size() : 0)
-                .activityCount(user.getActivities() != null ? user.getActivities().size() : 0)
+                .programCount(user.getFitnessPrograms() != null ? (long) user.getFitnessPrograms().size() : 0L)
+                .enrollmentCount(user.getUserPrograms() != null ? (long) user.getUserPrograms().size() : 0L)
                 .build();
     }
 }

@@ -24,7 +24,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.security.Principal;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @Service
@@ -50,16 +53,14 @@ public class InstructorServiceImpl implements InstructorService {
         
         return InstructorStatsResponse.builder()
                 .totalPrograms(totalPrograms)
+                .activePrograms(totalPrograms) // Assuming all programs are active for now
                 .totalStudents(0L) // TODO: Calculate unique students
+                .activeStudents(activeEnrollments) // Using active enrollments as proxy
                 .totalEnrollments(totalEnrollments)
                 .activeEnrollments(activeEnrollments)
-                .completedEnrollments(completedEnrollments)
-                .totalRevenue(0L) // TODO: Calculate from program prices and enrollments
-                .monthlyRevenue(0L) // TODO: Calculate monthly revenue
+                .totalRevenue(BigDecimal.ZERO) // TODO: Calculate from program prices and enrollments
+                .monthlyRevenue(BigDecimal.ZERO) // TODO: Calculate monthly revenue
                 .averageRating(0.0) // TODO: Calculate from reviews/ratings
-                .totalReviews(0L) // TODO: Count reviews
-                .newEnrollmentsThisMonth(0L) // TODO: Calculate monthly enrollments
-                .programsThisMonth(0L) // TODO: Calculate monthly programs
                 .build();
     }
 
@@ -217,13 +218,11 @@ public class InstructorServiceImpl implements InstructorService {
                 .avatarUrl(enrollment.getUserByUserId().getAvatarUrl())
                 .programId(enrollment.getFitnessProgramByProgramId().getId())
                 .programName(enrollment.getFitnessProgramByProgramId().getName())
-                .startDate(enrollment.getStartDate().toLocalDate())
-                .endDate(enrollment.getEndDate().toLocalDate())
+                .startDate(enrollment.getStartDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime())
+                .endDate(enrollment.getEndDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime())
                 .status(enrollment.getStatus().name())
-                .enrolledAt(enrollment.getStartDate().toLocalDate().atStartOfDay()) // TODO: Add proper enrolledAt field
+                .enrolledAt(enrollment.getStartDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime())
                 .progress(0) // TODO: Calculate actual progress
-                .cityName(enrollment.getUserByUserId().getCity() != null ? 
-                        enrollment.getUserByUserId().getCity().getName() : null)
                 .build();
     }
 }

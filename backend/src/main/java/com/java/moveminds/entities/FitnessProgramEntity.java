@@ -33,6 +33,9 @@ public class FitnessProgramEntity {
     @Basic
     @Column(name = "price", nullable = false, precision = 2)
     private BigDecimal price;
+    @Basic
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = false; // Default to inactive, admin must activate
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AdminUserResponse {
+    
     private Integer id;
     private String username;
     private String email;
@@ -22,10 +23,17 @@ public class AdminUserResponse {
     private boolean isActivated;
     private String avatarUrl;
     private String biography;
-    private String cityName;
     private LocalDateTime createdAt;
     private LocalDateTime lastLoginAt;
-    private int programCount;
-    private int enrollmentCount;
-    private int activityCount;
+    private Integer cityId;
+    private String cityName;
+    
+    // Additional fields for admin view
+    private Long programCount;
+    private Long enrollmentCount;
+    private Long studentCount;
+    private Long activityCount;
+    private Double averageRating;
+    private String status;
+    private LocalDateTime lastActivityAt;
 }

@@ -173,6 +173,7 @@ CREATE TABLE fitness_program
     category_id      INT                NULL,
     instructor_id    INT                NOT NULL,
     location_id      INT                NULL,
+    is_active        BOOLEAN            NOT NULL DEFAULT FALSE,
     CONSTRAINT pk_fitness_program PRIMARY KEY (id)
 );
 

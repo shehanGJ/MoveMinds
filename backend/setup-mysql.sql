@@ -78,6 +78,7 @@ CREATE TABLE fitness_program (
   category_id INT NOT NULL,
   location_id INT NOT NULL,
   youtube_url VARCHAR(255),
+  is_active BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'Indicates if the program is active and available for enrollment. Defaults to FALSE (inactive) and requires admin activation.',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_program_instructor FOREIGN KEY (instructor_id) REFERENCES `user`(id) ON DELETE RESTRICT,
   CONSTRAINT fk_program_category FOREIGN KEY (category_id) REFERENCES category(id) ON DELETE RESTRICT,
