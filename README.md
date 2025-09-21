@@ -38,35 +38,69 @@ MoveMinds is not just a fitness tracker - it's a comprehensive learning platform
 
 ### Homepage
 ![Homepage](screenshots/homepage.png)
-*Modern landing page with hero section, features overview, and testimonials*
+*Modern landing page featuring a hero section with call-to-action buttons, comprehensive features overview showcasing the platform's capabilities, customer testimonials, and a clean, professional design that reflects the fitness learning platform's mission.*
 
-### User Dashboard
-![User Dashboard](screenshots/user-dashboard.png)
-*User dashboard showing enrolled programs, recent activities, and quick actions*
+### Admin Dashboard Screenshots
 
-### Program Browsing
-![Programs](screenshots/programs.png)
-*Program catalog with filtering, search, and enrollment options*
+#### Admin Dashboard Overview
+![Admin Dashboard](screenshots/admin1.png)
+*Main admin dashboard displaying system overview with key metrics, user statistics, revenue analytics, and quick access to all administrative functions including user management, program approval, and system settings.*
 
-### Instructor Dashboard
-![Instructor Dashboard](screenshots/instructor-dashboard.png)
-*Instructor dashboard with program creation, student management, and analytics*
+#### Admin User Management
+![Admin User Management](screenshots/admin2.png)
+*Comprehensive user management interface showing user list with search and filtering capabilities, user details, account status management, and bulk operations for efficient user administration.*
 
-### Admin Dashboard
-![Admin Dashboard](screenshots/admin-dashboard.png)
-*Comprehensive admin panel with user management, program approval, and system analytics*
+#### Admin Program Approval
+![Admin Program Approval](screenshots/admin3.png)
+*Program approval workflow interface where administrators can review instructor-created programs, view program details, approve or reject submissions, and provide feedback to instructors.*
 
-### Program Creation Form
-![Program Creation](screenshots/program-creation.png)
-*Multi-step program creation form with validation and image upload*
+#### Admin Analytics Dashboard
+![Admin Analytics](screenshots/admin4.png)
+*Advanced analytics dashboard featuring interactive charts, revenue tracking, user engagement metrics, program performance statistics, and exportable reports for data-driven decision making.*
 
-### Payment Integration
-![Payment](screenshots/payment.png)
-*Secure payment processing with PayHere integration*
+### Instructor Dashboard Screenshots
 
-### Messaging System
-![Messages](screenshots/messages.png)
-*Real-time messaging interface between users and instructors*
+#### Instructor Dashboard Overview
+![Instructor Dashboard](screenshots/ins1.png)
+*Instructor main dashboard showing program statistics, student enrollment numbers, recent activities, quick access to program creation, student management, and performance metrics.*
+
+#### Program Creation Form
+![Program Creation](screenshots/ins2.png)
+*Multi-step program creation form with comprehensive fields including program details, category selection, difficulty level, pricing, schedule, and image upload functionality with real-time validation.*
+
+#### Student Management
+![Student Management](screenshots/ins3.png)
+*Student management interface displaying enrolled students, their progress tracking, completion status, communication history, and tools for monitoring student engagement and performance.*
+
+#### Instructor Analytics
+![Instructor Analytics](screenshots/ins4.png)
+*Instructor-specific analytics showing program performance, student engagement metrics, revenue tracking, completion rates, and insights to help instructors improve their programs.*
+
+### User Dashboard Screenshots
+
+#### User Dashboard Overview
+![User Dashboard](screenshots/user1.png)
+*User main dashboard displaying enrolled programs, recent activities, progress tracking, upcoming sessions, quick actions, and personalized recommendations based on user preferences.*
+
+#### Program Catalog
+![Program Catalog](screenshots/user2.png)
+*Comprehensive program catalog with advanced filtering options, search functionality, category browsing, difficulty level selection, and detailed program cards with enrollment options.*
+
+#### Program Enrollment
+![Program Enrollment](screenshots/user3.png)
+*Program enrollment interface showing detailed program information, instructor details, pricing, schedule, and secure payment integration with PayHere for seamless enrollment process.*
+
+#### Activity Tracking
+![Activity Tracking](screenshots/user4.png)
+*Activity tracking interface allowing users to log workouts, monitor progress, set goals, view statistics, and track their fitness journey with visual progress indicators and achievement badges.*
+
+#### Messaging System
+![Messaging System](screenshots/user5.png)
+*Real-time messaging interface enabling direct communication between users and instructors, with message history, file sharing capabilities, and notification system for seamless interaction.*
+
+#### Payment Integration
+![Payment Integration](screenshots/user6.png)
+*Secure payment processing interface integrated with PayHere sandbox, featuring multiple payment options, transaction history, and confirmation system for program enrollments and subscriptions.*
 
 ## 🚀 Setup Instructions
 
@@ -159,17 +193,7 @@ MoveMinds is not just a fitness tracker - it's a comprehensive learning platform
 
 ### Default Login Credentials
 
-#### Admin Account
-- **Username**: admin@moveminds.com
-- **Password**: admin123
-
-#### Instructor Account
-- **Username**: instructor@moveminds.com
-- **Password**: instructor123
-
-#### User Account
-- **Username**: user@moveminds.com
-- **Password**: user123
+Demo accounts are available for testing. Please contact the project maintainer for access credentials.
 
 ### PayHere Configuration
 
