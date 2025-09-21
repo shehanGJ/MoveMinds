@@ -3,6 +3,7 @@ package com.java.moveminds.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 import com.java.moveminds.enums.DifficultyLevel;
 
@@ -50,12 +51,15 @@ public class FitnessProgramEntity {
     private List<ProgramImageEntity> programImages;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", referencedColumnName = "id")
+    @ToString.Exclude
     private CategoryEntity category;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "instructor_id", referencedColumnName = "id", nullable = false)
+    @ToString.Exclude
     private UserEntity user;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "location_id", referencedColumnName = "id")
+    @ToString.Exclude
     private LocationEntity location;
     @JsonIgnore
     @OneToMany(mappedBy = "fitnessProgram", cascade = CascadeType.ALL)

@@ -54,6 +54,8 @@ public class SecurityConfiguration {
                         .requestMatchers("/news/**").permitAll() // News endpoints
                         .requestMatchers("/attributes").permitAll() // Attributes data
                         .requestMatchers("/comments").permitAll() // Comments data
+                        .requestMatchers("/category/**").permitAll() // Category data
+                        .requestMatchers("/location/**").permitAll() // Location data
                         
                         // Program endpoints - Read access for all, Write access for instructors/admins
                         .requestMatchers(HttpMethod.GET, "/programs").permitAll() // List programs

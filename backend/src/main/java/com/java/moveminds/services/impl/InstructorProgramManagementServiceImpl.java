@@ -5,10 +5,14 @@ import com.java.moveminds.dto.response.FitnessProgramListResponse;
 import com.java.moveminds.dto.response.FitnessProgramResponse;
 import com.java.moveminds.entities.FitnessProgramEntity;
 import com.java.moveminds.entities.UserEntity;
+import com.java.moveminds.entities.CategoryEntity;
+import com.java.moveminds.entities.LocationEntity;
 import com.java.moveminds.exceptions.ProgramNotFoundException;
 import com.java.moveminds.exceptions.UnauthorizedAccessException;
 import com.java.moveminds.repositories.FitnessProgramEntityRepository;
 import com.java.moveminds.repositories.UserEntityRepository;
+import com.java.moveminds.repositories.CategoryEntityRepository;
+import com.java.moveminds.repositories.LocationEntityRepository;
 import com.java.moveminds.services.instructor.InstructorProgramManagementService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +40,8 @@ public class InstructorProgramManagementServiceImpl implements InstructorProgram
     
     private final FitnessProgramEntityRepository programRepository;
     private final UserEntityRepository userRepository;
+    private final CategoryEntityRepository categoryRepository;
+    private final LocationEntityRepository locationRepository;
     private final ModelMapper modelMapper;
     
     @Override
@@ -49,6 +55,13 @@ public class InstructorProgramManagementServiceImpl implements InstructorProgram
         UserEntity instructor = userRepository.findByUsername(principal.getName())
                 .orElseThrow(() -> new UnauthorizedAccessException("Instructor not found"));
         
+        // Fetch category and location entities
+        CategoryEntity category = categoryRepository.findById(request.getCategoryId())
+                .orElseThrow(() -> new IllegalArgumentException("Category not found with ID: " + request.getCategoryId()));
+        
+        LocationEntity location = locationRepository.findById(request.getLocationId())
+                .orElseThrow(() -> new IllegalArgumentException("Location not found with ID: " + request.getLocationId()));
+        
         FitnessProgramEntity program = new FitnessProgramEntity();
         program.setName(request.getName());
         program.setDescription(request.getDescription());
@@ -56,7 +69,10 @@ public class InstructorProgramManagementServiceImpl implements InstructorProgram
         program.setDuration(request.getDuration());
         program.setPrice(request.getPrice());
         program.setUser(instructor);
+        program.setCategory(category);
+        program.setLocation(location);
         program.setYoutubeUrl(request.getYoutubeUrl());
+        program.setIsActive(request.getIsActive() != null ? request.getIsActive() : false);
         
         // Handle file uploads if provided
         if (files != null && !files.isEmpty()) {

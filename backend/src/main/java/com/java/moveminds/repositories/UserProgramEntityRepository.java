@@ -23,10 +23,11 @@ public interface UserProgramEntityRepository extends JpaRepository<UserProgramEn
     // Instructor service methods
     long countByFitnessProgramByProgramId_User(UserEntity instructor);
     long countByFitnessProgramByProgramId_UserAndStatus(UserEntity instructor, Status status);
-    Page<UserProgramEntity> findByFitnessProgramByProgramId_User(UserEntity instructor, Pageable pageable);
+    @Query("SELECT up FROM UserProgramEntity up WHERE up.fitnessProgramByProgramId.user = :instructor ORDER BY up.createdAt DESC")
+    Page<UserProgramEntity> findByFitnessProgramByProgramId_User(@Param("instructor") UserEntity instructor, Pageable pageable);
     
     // Enhanced methods for instructor student management
-    @Query("SELECT up FROM UserProgramEntity up WHERE up.fitnessProgramByProgramId.user.id = :instructorId")
+    @Query("SELECT up FROM UserProgramEntity up WHERE up.fitnessProgramByProgramId.user.id = :instructorId ORDER BY up.createdAt DESC")
     Page<UserProgramEntity> findByInstructorId(@Param("instructorId") Integer instructorId, Pageable pageable);
     
     @Query("SELECT up FROM UserProgramEntity up WHERE up.fitnessProgramByProgramId.id = :programId")

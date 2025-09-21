@@ -26,8 +26,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.security.Principal;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.List;
 
 @Service
@@ -49,7 +47,6 @@ public class InstructorServiceImpl implements InstructorService {
         long totalPrograms = instructor.getFitnessPrograms() != null ? instructor.getFitnessPrograms().size() : 0;
         long totalEnrollments = userProgramRepository.countByFitnessProgramByProgramId_User(instructor);
         long activeEnrollments = userProgramRepository.countByFitnessProgramByProgramId_UserAndStatus(instructor, Status.ACTIVE);
-        long completedEnrollments = 0L; // TODO: Implement completed status logic
         
         return InstructorStatsResponse.builder()
                 .totalPrograms(totalPrograms)
@@ -218,10 +215,10 @@ public class InstructorServiceImpl implements InstructorService {
                 .avatarUrl(enrollment.getUserByUserId().getAvatarUrl())
                 .programId(enrollment.getFitnessProgramByProgramId().getId())
                 .programName(enrollment.getFitnessProgramByProgramId().getName())
-                .startDate(enrollment.getStartDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime())
-                .endDate(enrollment.getEndDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime())
+                .startDate(enrollment.getStartDate())
+                .endDate(enrollment.getEndDate())
                 .status(enrollment.getStatus().name())
-                .enrolledAt(enrollment.getStartDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime())
+                .enrolledAt(enrollment.getCreatedAt())
                 .progress(0) // TODO: Calculate actual progress
                 .build();
     }

@@ -3,6 +3,7 @@ package com.java.moveminds.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.ToString;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -54,6 +55,7 @@ public class UserEntity implements UserDetails {
     private List<CommentEntity> comments;
     @JsonIgnore
     @OneToMany(mappedBy = "user")
+    @ToString.Exclude
     private List<FitnessProgramEntity> fitnessPrograms;
     @JsonIgnore
     @OneToMany(mappedBy = "sender")

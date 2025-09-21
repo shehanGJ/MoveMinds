@@ -254,14 +254,14 @@ export const Messages = () => {
 
   return (
     <div className="min-h-screen bg-gradient-dark">
-      <div className="space-y-8 p-6">
+      <div className="space-y-6 p-4 pt-2">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-            <h1 className="text-4xl font-bold mb-2 bg-gradient-primary bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold mb-1 bg-gradient-primary bg-clip-text text-transparent">
               Messages
             </h1>
-            <p className="text-muted-foreground text-lg">
+            <p className="text-muted-foreground text-base">
             Communicate with other users and instructors
           </p>
         </div>
@@ -342,24 +342,24 @@ export const Messages = () => {
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-200px)] min-h-[700px]">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-120px)] min-h-[700px] max-h-[900px]">
         {/* Conversations List */}
         <div className="lg:col-span-1">
-          <Card className="h-full flex flex-col bg-gradient-card border-border shadow-card">
-            <CardHeader className="flex-shrink-0 border-b border-primary/20 bg-gradient-to-r from-primary/10 to-primary/5">
+          <Card className="h-full flex flex-col bg-gradient-card border-border shadow-card max-h-[750px]">
+            <CardHeader className="flex-shrink-0 border-b border-border bg-card py-3">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/20">
-                  <MessageCircle className="w-6 h-6 text-primary" />
+                <div className="p-2 rounded-lg bg-muted/50">
+                  <MessageCircle className="w-5 h-5 text-muted-foreground" />
                 </div>
-                <CardTitle className="text-xl font-bold text-foreground">Messages</CardTitle>
+                <CardTitle className="text-lg font-bold text-foreground">Messages</CardTitle>
               </div>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-primary" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search conversations..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 bg-card/50 border-primary/30 focus:border-primary/60 focus:ring-primary/20 text-foreground placeholder:text-muted-foreground"
+                  className="pl-10 bg-card/50 border-border focus:border-border focus:ring-0 text-foreground placeholder:text-muted-foreground"
                 />
               </div>
             </CardHeader>
@@ -369,40 +369,68 @@ export const Messages = () => {
                   filteredConversations.map((conversation) => (
                     <div
                       key={conversation.userId}
-                      className={`p-4 cursor-pointer hover:bg-primary/10 transition-all duration-200 border-b border-border/30 group ${
+                      className={`p-4 cursor-pointer transition-all duration-200 border-b border-border/30 group ${
                         selectedConversation?.userId === conversation.userId 
-                          ? 'bg-primary/20 border-l-4 border-l-primary shadow-card' 
-                          : 'hover:shadow-subtle'
+                          ? 'bg-primary/20 border-l-4 border-l-primary shadow-card ring-2 ring-primary/30 hover:bg-primary/25' 
+                          : 'hover:bg-muted/50 hover:shadow-subtle'
                       }`}
                       onClick={() => setSelectedConversation(conversation)}
                     >
                       <div className="flex items-center gap-3">
                         <div className="relative">
-                          <Avatar className="w-12 h-12 ring-2 ring-primary/30 shadow-subtle">
+                          <Avatar className={`w-10 h-10 ring-2 shadow-subtle ${
+                            selectedConversation?.userId === conversation.userId 
+                              ? 'ring-primary/50' 
+                              : 'ring-border'
+                          }`}>
                             <AvatarImage src={conversation.avatarUrl} alt={conversation.username} />
-                            <AvatarFallback className="bg-gradient-primary text-white text-sm font-bold">
+                            <AvatarFallback className={`text-xs font-bold ${
+                              selectedConversation?.userId === conversation.userId 
+                                ? 'bg-primary/20 text-primary' 
+                                : 'bg-muted text-muted-foreground'
+                            }`}>
                               {conversation.username.split(' ').map(n => n[0]).join('')}
                           </AvatarFallback>
                         </Avatar>
                           {/* Online indicator */}
-                          <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-primary border-2 border-card rounded-full shadow-subtle"></div>
+                          <div className={`absolute -bottom-1 -right-1 w-3 h-3 border-2 border-card rounded-full shadow-subtle ${
+                            selectedConversation?.userId === conversation.userId 
+                              ? 'bg-primary' 
+                              : 'bg-primary'
+                          }`}></div>
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between mb-1">
-                            <h3 className="font-semibold text-sm truncate text-foreground">
+                            <h3 className={`font-semibold text-sm truncate ${
+                              selectedConversation?.userId === conversation.userId 
+                                ? 'text-primary font-bold' 
+                                : 'text-foreground'
+                            }`}>
                               {conversation.username}
                             </h3>
-                            <span className="text-xs text-muted-foreground flex-shrink-0">
+                            <span className={`text-xs flex-shrink-0 ${
+                              selectedConversation?.userId === conversation.userId 
+                                ? 'text-primary/80' 
+                                : 'text-muted-foreground'
+                            }`}>
                               {conversation.lastMessageTime && formatDate(conversation.lastMessageTime)}
                             </span>
                           </div>
                           <div className="flex items-center justify-between">
-                            <p className="text-xs text-muted-foreground truncate flex-1">
+                            <p className={`text-sm truncate flex-1 ${
+                              selectedConversation?.userId === conversation.userId 
+                                ? 'text-foreground font-medium' 
+                                : 'text-muted-foreground'
+                            }`}>
                             {conversation.lastMessage || "No messages yet"}
                           </p>
                             {conversation.unread && (
                               <div className="ml-2 flex-shrink-0">
-                                <div className="w-2 h-2 bg-primary rounded-full shadow-subtle"></div>
+                                <div className={`w-2 h-2 rounded-full shadow-subtle ${
+                                  selectedConversation?.userId === conversation.userId 
+                                    ? 'bg-primary' 
+                                    : 'bg-primary'
+                                }`}></div>
                               </div>
                             )}
                           </div>
@@ -430,27 +458,27 @@ export const Messages = () => {
 
         {/* Messages */}
         <div className="lg:col-span-2">
-          <Card className="h-full flex flex-col bg-gradient-card border-border shadow-card">
+          <Card className="h-full flex flex-col bg-gradient-card border-border shadow-card max-h-[750px]">
             {selectedConversation ? (
               <>
                 {/* Chat Header */}
-                <CardHeader className="flex-shrink-0 border-b border-primary/20 bg-gradient-to-r from-primary/10 to-primary/5">
-                  <div className="flex items-center gap-4">
+                <CardHeader className="flex-shrink-0 border-b border-border bg-card py-3">
+                  <div className="flex items-center gap-3">
                     <div className="relative">
-                      <Avatar className="w-14 h-14 ring-2 ring-primary/30 shadow-subtle">
+                      <Avatar className="w-12 h-12 ring-2 ring-border shadow-subtle">
                         <AvatarImage src={selectedConversation.avatarUrl} alt={selectedConversation.username} />
-                        <AvatarFallback className="bg-gradient-primary text-white font-bold text-lg">
+                        <AvatarFallback className="bg-muted text-muted-foreground font-bold text-sm">
                           {selectedConversation.username.split(' ').map(n => n[0]).join('')}
                       </AvatarFallback>
                     </Avatar>
                       {/* Online indicator */}
-                      <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-primary border-2 border-card rounded-full shadow-subtle"></div>
+                      <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-primary border-2 border-card rounded-full shadow-subtle"></div>
                     </div>
                     <div className="flex-1">
-                      <CardTitle className="text-xl font-bold text-foreground">{selectedConversation.username}</CardTitle>
-                      <CardDescription className="flex items-center gap-2 text-primary">
+                      <CardTitle className="text-base font-semibold text-foreground">{selectedConversation.username}</CardTitle>
+                      <CardDescription className="flex items-center gap-2 text-muted-foreground">
                         <div className="w-2 h-2 bg-primary rounded-full shadow-subtle"></div>
-                        <span className="font-medium">Online</span>
+                        <span className="font-medium text-xs">Online</span>
                       </CardDescription>
                     </div>
                   </div>
@@ -459,7 +487,7 @@ export const Messages = () => {
                 {/* Messages Container */}
                 <div className="flex-1 flex flex-col min-h-0">
                   {/* Messages Area with Abstract Background */}
-                  <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gradient-to-b from-card via-card/95 to-secondary/20 relative">
+                  <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gradient-to-b from-card via-card/95 to-secondary/20 relative">
                     {/* Abstract Pattern Overlay */}
                     <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
                       <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_50%,_rgba(34,197,94,0.3)_0%,_transparent_50%)]"></div>
@@ -475,46 +503,55 @@ export const Messages = () => {
                       </div>
                     ) : messages.length > 0 ? (
                       messages.map((message) => {
-                        // Determine if message is from current user
-                        const isFromCurrentUser = currentUser ? message.senderId === currentUser.id : false;
+                        // Determine if message is from current user (handle both string and number IDs)
+                        let isFromCurrentUser = currentUser ? 
+                          (message.senderId == currentUser.id || message.senderId === currentUser.id) : false;
+                        
+                        // Fallback: if current user check fails, check if sender is NOT the conversation partner
+                        if (!isFromCurrentUser && selectedConversation) {
+                          isFromCurrentUser = message.senderId != selectedConversation.userId && 
+                                            message.senderId !== selectedConversation.userId;
+                        }
+                        
                         
                         return (
                           <div
                             key={message.id}
-                            className={`flex ${isFromCurrentUser ? 'justify-end' : 'justify-start'} group relative`}
+                            className={`flex w-full ${isFromCurrentUser ? 'justify-end' : 'justify-start'} group relative mb-3`}
                           >
                             <div className={`flex items-end gap-2 max-w-[75%] ${isFromCurrentUser ? 'flex-row-reverse' : 'flex-row'}`}>
-                               {/* Avatar - only show for received messages */}
-                               {!isFromCurrentUser && (
-                                 <Avatar className="w-10 h-10 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ring-2 ring-primary/30 shadow-subtle">
-                                   <AvatarImage src={selectedConversation.avatarUrl} alt={selectedConversation.username} />
-                                   <AvatarFallback className="bg-gradient-primary text-white text-sm font-bold">
-                                     {selectedConversation.username.split(' ').map(n => n[0]).join('')}
-                                   </AvatarFallback>
-                                 </Avatar>
-                               )}
+                               {/* Avatar - show for both sent and received messages */}
+                               <Avatar className="w-8 h-8 flex-shrink-0 ring-2 ring-border shadow-subtle">
+                                 <AvatarImage src={isFromCurrentUser ? currentUser?.avatarUrl : selectedConversation.avatarUrl} alt={isFromCurrentUser ? 'You' : selectedConversation.username} />
+                                 <AvatarFallback className="bg-muted text-muted-foreground text-xs font-bold">
+                                   {isFromCurrentUser 
+                                     ? (currentUser?.firstName?.[0] || 'Y') + (currentUser?.lastName?.[0] || '')
+                                     : selectedConversation.username.split(' ').map(n => n[0]).join('')
+                                   }
+                                 </AvatarFallback>
+                               </Avatar>
                               
                               {/* Message bubble */}
                               <div className={`flex flex-col ${isFromCurrentUser ? 'items-end' : 'items-start'}`}>
                                 {/* Message content */}
                                 <div
-                                  className={`relative px-5 py-4 rounded-2xl transition-all duration-200 hover:shadow-card ${
+                                  className={`relative px-4 py-3 rounded-2xl transition-all duration-200 hover:shadow-card ${
                                     isFromCurrentUser
-                                      ? 'bg-gradient-primary text-white rounded-br-md shadow-subtle'
-                                      : 'bg-card border border-primary/20 text-foreground rounded-bl-md hover:border-primary/40 hover:shadow-subtle'
+                                      ? 'bg-primary text-primary-foreground rounded-br-md shadow-subtle'
+                                      : 'bg-muted text-muted-foreground rounded-bl-md shadow-subtle'
                                   }`}
                                 >
                                   {/* Subject line for formal messages */}
                                   {message.subject && message.subject !== "Quick message" && (
                                     <div className={`text-xs font-medium mb-2 ${
-                                      isFromCurrentUser ? 'text-primary-foreground/80' : 'text-muted-foreground'
+                                      isFromCurrentUser ? 'text-primary-foreground/80' : 'text-foreground/70'
                                     }`}>
                                       {message.subject}
                                     </div>
                                   )}
                                   
                                   {/* Message content */}
-                                  <p className="text-sm leading-relaxed whitespace-pre-wrap font-medium">
+                                  <p className="text-sm leading-relaxed whitespace-pre-wrap">
                                     {message.content}
                                   </p>
                                   
@@ -523,7 +560,7 @@ export const Messages = () => {
                                     className={`absolute bottom-0 w-3 h-3 ${
                                       isFromCurrentUser
                                         ? 'right-0 bg-primary transform translate-x-1/2 rotate-45'
-                                        : 'left-0 bg-card border-l border-b border-primary/20 transform -translate-x-1/2 rotate-45'
+                                        : 'left-0 bg-muted transform -translate-x-1/2 rotate-45'
                                     }`}
                                   />
                                 </div>
@@ -568,12 +605,12 @@ export const Messages = () => {
                   </div>
                   
                    {/* Message Input - Fixed at bottom */}
-                   <div className="flex-shrink-0 p-6 border-t border-border bg-gradient-card backdrop-blur-sm sticky bottom-0 z-10">
+                   <div className="flex-shrink-0 p-4 border-t border-border bg-gradient-card backdrop-blur-sm sticky bottom-0 z-10">
                      <div className="flex items-end gap-4">
                        <div className="flex-1 relative">
                          <Textarea
                            placeholder="Write your message..."
-                           className="min-h-[50px] max-h-32 resize-none rounded-2xl border-border bg-card shadow-subtle focus:ring-2 focus:ring-primary/20 focus:border-primary/40 pr-12 transition-all duration-200 text-foreground placeholder:text-muted-foreground"
+                           className="min-h-[50px] max-h-32 resize-none rounded-2xl border-border bg-card shadow-subtle focus:ring-0 focus:border-border pr-12 transition-all duration-200 text-foreground placeholder:text-muted-foreground"
                            value={newMessage}
                            onChange={(e) => setNewMessage(e.target.value)}
                            onKeyDown={(e) => {

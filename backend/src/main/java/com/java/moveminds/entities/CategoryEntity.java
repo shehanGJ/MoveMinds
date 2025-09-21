@@ -25,6 +25,7 @@ public class CategoryEntity {
     private List<AttributeEntity> attributes;
     @JsonIgnore
     @OneToMany(mappedBy = "category")
+    @ToString.Exclude
     private List<FitnessProgramEntity> fitnessPrograms;
     @JsonIgnore
     @OneToMany(mappedBy = "category")

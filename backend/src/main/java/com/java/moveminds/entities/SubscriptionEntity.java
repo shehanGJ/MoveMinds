@@ -2,6 +2,7 @@ package com.java.moveminds.entities;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.ToString;
 
 @Data
 @Entity
@@ -16,6 +17,7 @@ public class SubscriptionEntity {
     private UserEntity user;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", referencedColumnName = "id", nullable = false)
+    @ToString.Exclude
     private CategoryEntity category;
 
 }

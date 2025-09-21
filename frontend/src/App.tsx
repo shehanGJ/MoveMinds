@@ -88,6 +88,9 @@ const App = () => (
             <Route path="students" element={<div>Students - Coming Soon</div>} />
             <Route path="analytics" element={<div>Instructor Analytics - Coming Soon</div>} />
             <Route path="schedule" element={<div>Schedule - Coming Soon</div>} />
+            <Route path="messages" element={<Messages />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="settings" element={<div>Settings - Coming Soon</div>} />
           </Route>
           
           {/* Protected routes - Admins */}
@@ -104,6 +107,8 @@ const App = () => (
             <Route path="users" element={<AdminUsers />} />
             <Route path="analytics" element={<div>System Analytics - Coming Soon</div>} />
             <Route path="settings" element={<div>System Settings - Coming Soon</div>} />
+            <Route path="messages" element={<Messages />} />
+            <Route path="profile" element={<Profile />} />
           </Route>
           
           {/* Catch-all route */}

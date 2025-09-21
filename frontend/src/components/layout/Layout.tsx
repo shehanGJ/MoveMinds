@@ -20,7 +20,7 @@ export const Layout = () => {
           />
         )}
         
-        <main className="flex-1 overflow-hidden">
+        <main className="flex-1 overflow-hidden md:ml-64 pt-16">
           <div className="container mx-auto p-4 md:p-6 lg:p-8">
             <Outlet />
           </div>

@@ -95,21 +95,21 @@ export const Dashboard = () => {
       title: "My Programs",
       description: "View enrolled programs",
       icon: Calendar,
-      href: "/my-programs",
+      href: "/dashboard/my-programs",
       variant: "fitness" as const,
     },
     {
       title: "Log Activity",
       description: "Record your workout",
       icon: ActivityIcon,
-      href: "/activities/new",
+      href: "/dashboard/activities",
       variant: "gradient" as const,
     },
     {
       title: "Messages",
       description: "Check your messages",
       icon: MessageCircle,
-      href: "/messages",
+      href: "/dashboard/messages",
       variant: "neumorphic" as const,
     },
   ];
@@ -197,7 +197,7 @@ export const Dashboard = () => {
         </div>
         <div className="flex gap-3">
           <Button variant="outline" asChild>
-            <Link to="/profile">View Profile</Link>
+            <Link to="/dashboard/profile">View Profile</Link>
           </Button>
           <Button variant="hero" asChild>
             <Link to="/programs">Browse Programs</Link>
@@ -270,7 +270,7 @@ export const Dashboard = () => {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">Recent Activities</h2>
           <Button variant="ghost" size="sm" asChild>
-            <Link to="/activities">View All</Link>
+            <Link to="/dashboard/activities">View All</Link>
           </Button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -308,7 +308,7 @@ export const Dashboard = () => {
                   Log your first activity to see your progress here.
                 </p>
                 <Button variant="hero" asChild>
-                  <Link to="/activities/new">Log Activity</Link>
+                  <Link to="/dashboard/activities">Log Activity</Link>
                 </Button>
               </CardContent>
             </Card>
@@ -322,13 +322,13 @@ export const Dashboard = () => {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold">Recent Messages</h2>
             <Button variant="ghost" size="sm" asChild>
-              <Link to="/messages">View All</Link>
+              <Link to="/dashboard/messages">View All</Link>
             </Button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {conversations.slice(0, 3).map((conversation) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {conversations.slice(0, 4).map((conversation) => (
               <Card key={conversation.id} variant="neumorphic" className="group cursor-pointer hover:shadow-glow transition-all duration-300">
-                <CardContent className="p-4">
+                <CardContent className="p-3">
                   <div className="flex items-center gap-2 mb-2">
                     <Badge variant="secondary" className="text-xs">
                       Message
@@ -337,10 +337,10 @@ export const Dashboard = () => {
                       {new Date(conversation.lastMessageAt).toLocaleDateString()}
                     </span>
                   </div>
-                  <h3 className="font-semibold mb-2">
+                  <h3 className="font-semibold mb-1 text-sm">
                     {conversation.otherUserFirstName} {conversation.otherUserLastName}
                   </h3>
-                  <p className="text-sm text-muted-foreground line-clamp-2">
+                  <p className="text-xs text-muted-foreground line-clamp-2">
                     {conversation.lastMessageContent}
                   </p>
                 </CardContent>

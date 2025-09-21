@@ -565,8 +565,16 @@ public class FitnessProgramServiceImpl implements FitnessProgramService {
         FitnessProgramHomeResponse programResponse = new FitnessProgramHomeResponse();
         programResponse.setId(program.getId());
         programResponse.setName(program.getName());
+        programResponse.setDescription(program.getDescription());
         programResponse.setPrice(program.getPrice());
+        programResponse.setDuration(program.getDuration());
+        programResponse.setDifficultyLevel(program.getDifficultyLevel());
         programResponse.setInstructorId(program.getUser().getId());
+        programResponse.setInstructorName(generateInstructorName(program.getUser()));
+        
+        if (program.getLocation() != null) {
+            programResponse.setLocationName(program.getLocation().getName());
+        }
 
         List<String> imageUrls = program
                 .getProgramImages()

@@ -2,6 +2,7 @@ package com.java.moveminds.entities;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.ToString;
 
 import java.util.List;
 
@@ -21,6 +22,7 @@ public class AttributeEntity {
     private String description;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", referencedColumnName = "id", nullable = false)
+    @ToString.Exclude
     private CategoryEntity category;
     @OneToMany(mappedBy = "attribute")
     private List<AttributeValueEntity> attributeValues;

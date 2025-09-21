@@ -38,7 +38,7 @@ public class InstructorStudentManagementController {
     public ResponseEntity<Page<ProgramEnrollmentResponse>> getStudents(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "20") int size,
-            @RequestParam(value = "sort", defaultValue = "enrollmentDate") String sort,
+            @RequestParam(value = "sort", defaultValue = "createdAt") String sort,
             @RequestParam(value = "direction", defaultValue = "desc") String direction,
             @RequestParam(value = "search", required = false) String search,
             @RequestParam(value = "status", required = false) String status,

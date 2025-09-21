@@ -147,8 +147,6 @@ public class UserProgramServiceImpl implements UserProgramService {
             response.setInstructorId(program.getUser().getId());
         }
 
-        response.setStartDate(userProgram.getStartDate());
-        response.setEndDate(userProgram.getEndDate());
         response.setStatus(userProgram.getStatus().toString());
 
         return response;

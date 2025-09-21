@@ -90,16 +90,18 @@ export interface Program {
   id: number;
   name: string;
   description: string;
-  difficulty: string; // mapped from backend's difficultyLevel
+  difficultyLevel: string; // matches backend's difficultyLevel field
   duration: number; // minutes
   price: number;
-  imageUrl?: string;
+  images?: string[]; // array of image URLs
+  imageUrl?: string; // first image for backward compatibility
   attributes?: Attribute[];
   videoUrl?: string;
   category?: string;
   instructorName?: string;
   instructorAvatarUrl?: string;
   locationName?: string;
+  instructorId?: number;
 }
 
 export interface UserProgram {
@@ -523,22 +525,15 @@ export const adminApi = {
 // Instructor API
 export const instructorApi = {
   getStats: () => api.get<InstructorStatsResponse>('/instructor/stats'),
-  createProgram: (programData: any, files: File[]) => {
-    const formData = new FormData();
-    formData.append('program', JSON.stringify(programData));
-    files.forEach(file => formData.append('files', file));
-    return api.post<Program>('/instructor/programs', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+  createProgram: (programData: any, files: File[] = []) => {
+    return api.post<Program>('/instructor/programs', programData);
   },
   updateProgram: (programId: number, programData: any, files?: File[], removedImages?: string[]) => {
     const formData = new FormData();
     formData.append('program', JSON.stringify(programData));
     if (files) files.forEach(file => formData.append('files', file));
     if (removedImages) formData.append('removedImages', JSON.stringify(removedImages));
-    return api.put<Program>(`/instructor/programs/${programId}`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    return api.put<Program>(`/instructor/programs/${programId}`, formData);
   },
   deleteProgram: (programId: number) => api.delete(`/instructor/programs/${programId}`),
   getMyPrograms: (params?: { page?: number; size?: number; sort?: string }) => 
@@ -552,6 +547,28 @@ export const instructorApi = {
   getStudents: (params?: { page?: number; size?: number }) => 
     api.get<PageResponse<ProgramEnrollmentResponse>>('/instructor/students', { params }),
 };
+
+// Category and Location API
+export const categoryApi = {
+  getAll: () => api.get<Category[]>('/category'),
+  getWithSubscriptions: () => api.get<Category[]>('/category/subscriptions'),
+  subscribe: (categoryId: number) => api.post<Category>(`/category/subscribe`, { categoryId }),
+};
+
+export const locationApi = {
+  getAll: () => api.get<Location[]>('/location'),
+};
+
+export interface Category {
+  id: number;
+  name: string;
+  description?: string;
+}
+
+export interface Location {
+  id: number;
+  name: string;
+}
 
 // Payment API
 export const paymentApi = {

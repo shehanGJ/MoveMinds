@@ -76,14 +76,14 @@ export const Header = ({ onMenuToggle }: HeaderProps) => {
               </Link>
               {userRole === 'USER' && (
                 <Link 
-                  to="/activities" 
+                  to="/dashboard/activities" 
                   className="text-sm font-semibold text-muted-foreground hover:text-primary transition-all duration-200 hover:shadow-subtle px-3 py-2 rounded-lg hover:bg-primary/10"
                 >
                   Activities
                 </Link>
               )}
               <Link 
-                to="/messages" 
+                to="/dashboard/messages" 
                 className="text-sm font-semibold text-muted-foreground hover:text-primary transition-all duration-200 hover:shadow-subtle px-3 py-2 rounded-lg hover:bg-primary/10"
               >
                 Messages
@@ -113,13 +113,13 @@ export const Header = ({ onMenuToggle }: HeaderProps) => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56 bg-gradient-card border-border shadow-elevated" align="end">
                   <DropdownMenuItem asChild>
-                    <Link to="/profile" className="flex items-center">
+                    <Link to="/dashboard/profile" className="flex items-center">
                       <User className="mr-2 h-4 w-4" />
                       Profile
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/settings" className="flex items-center">
+                    <Link to="/dashboard/settings" className="flex items-center">
                       <Settings className="mr-2 h-4 w-4" />
                       Settings
                     </Link>

@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.sql.Date;
 
 @Data
 @Builder
@@ -29,8 +30,8 @@ public class ProgramEnrollmentResponse {
     
     private String status;
     private LocalDateTime enrolledAt;
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
+    private Date startDate;
+    private Date endDate;
     
     private Integer progress;
     private BigDecimal amount;

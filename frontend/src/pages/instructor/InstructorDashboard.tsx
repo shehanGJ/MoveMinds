@@ -35,16 +35,19 @@ import {
   PlayCircle,
   PauseCircle,
   UserCheck,
-  UserX
+  UserX,
+  CheckCircle
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { instructorApi, InstructorStatsResponse, ProgramEnrollmentResponse, PageResponse, Program } from '@/lib/api';
+import { instructorApi, InstructorStatsResponse, ProgramEnrollmentResponse, PageResponse, Program, categoryApi, locationApi, Category, Location } from '@/lib/api';
 import { toast } from '@/hooks/use-toast';
 
 export const InstructorDashboard = () => {
   const [stats, setStats] = useState<InstructorStatsResponse | null>(null);
   const [programs, setPrograms] = useState<PageResponse<Program> | null>(null);
   const [students, setStudents] = useState<PageResponse<ProgramEnrollmentResponse> | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'programs' | 'students' | 'analytics'>('overview');
   const [createProgramOpen, setCreateProgramOpen] = useState(false);
@@ -58,20 +61,37 @@ export const InstructorDashboard = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [statsResponse, programsResponse, studentsResponse] = await Promise.all([
-        instructorApi.getStats(),
-        instructorApi.getMyPrograms({ page: currentPage, size: pageSize }),
-        instructorApi.getStudents({ page: currentPage, size: pageSize })
+      
+      // Fetch public data first (categories and locations)
+      const [categoriesResponse, locationsResponse] = await Promise.all([
+        categoryApi.getAll(),
+        locationApi.getAll()
       ]);
       
-      setStats(statsResponse.data);
-      setPrograms(programsResponse.data);
-      setStudents(studentsResponse.data);
+      setCategories(categoriesResponse.data);
+      setLocations(locationsResponse.data);
+      
+      // Try to fetch instructor-specific data (may fail if not authenticated)
+      try {
+        const [statsResponse, programsResponse, studentsResponse] = await Promise.all([
+          instructorApi.getStats(),
+          instructorApi.getMyPrograms({ page: currentPage, size: pageSize }),
+          instructorApi.getStudents({ page: currentPage, size: pageSize })
+        ]);
+        
+        setStats(statsResponse.data);
+        setPrograms(programsResponse.data);
+        setStudents(studentsResponse.data);
+      } catch (instructorError) {
+        // Instructor data fetch failed (authentication required)
+        // Don't show error toast for instructor data
+      }
+      
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to load dashboard data"
+        description: "Failed to load categories and locations"
       });
     } finally {
       setLoading(false);
@@ -149,7 +169,11 @@ export const InstructorDashboard = () => {
             <Download className="h-4 w-4 mr-2" />
             Export Data
           </Button>
-          <Button variant="fitness" className="flex items-center gap-2">
+          <Button 
+            variant="fitness" 
+            className="flex items-center gap-2"
+            onClick={() => setCreateProgramOpen(true)}
+          >
             <Plus className="h-4 w-4" />
             Create Program
           </Button>
@@ -267,7 +291,7 @@ export const InstructorDashboard = () => {
                           <Badge variant="default">
                             Active
                           </Badge>
-                          <Badge variant="outline">{program.difficulty}</Badge>
+                          <Badge variant="outline">{program.difficultyLevel}</Badge>
                         </div>
                         
                         <p className="text-muted-foreground mb-4">{program.description}</p>
@@ -589,14 +613,19 @@ export const InstructorDashboard = () => {
 
       {/* Create Program Dialog */}
       <Dialog open={createProgramOpen} onOpenChange={setCreateProgramOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create New Program</DialogTitle>
             <DialogDescription>
               Create a new fitness program for your students
             </DialogDescription>
           </DialogHeader>
-          <CreateProgramForm onSubmit={handleCreateProgram} onCancel={() => setCreateProgramOpen(false)} />
+          <CreateProgramForm 
+            onSubmit={handleCreateProgram} 
+            onCancel={() => setCreateProgramOpen(false)}
+            categories={categories}
+            locations={locations}
+          />
         </DialogContent>
       </Dialog>
     </div>
@@ -604,90 +633,358 @@ export const InstructorDashboard = () => {
 };
 
 // Program Creation Form Component
-const CreateProgramForm = ({ onSubmit, onCancel }: { onSubmit: (data: any) => void; onCancel: () => void }) => {
+const CreateProgramForm = ({ 
+  onSubmit, 
+  onCancel, 
+  categories, 
+  locations 
+}: { 
+  onSubmit: (data: any) => void; 
+  onCancel: () => void;
+  categories: Category[];
+  locations: Location[];
+}) => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    difficulty: 'BEGINNER',
+    difficultyLevel: 'BEGINNER' as string,
     duration: 4,
     price: 0,
-    category: 'FITNESS'
+    categoryId: null as number | null,
+    locationId: null as number | null,
+    youtubeUrl: '',
+    specificAttributes: [] as any[]
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Set default values for category and location when they are loaded
+  useEffect(() => {
+    if (categories.length > 0 && locations.length > 0 && formData.categoryId === null && formData.locationId === null) {
+      setFormData(prev => ({
+        ...prev,
+        categoryId: categories[0].id,
+        locationId: locations[0].id
+      }));
+    }
+  }, [categories, locations, formData.categoryId, formData.locationId]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    if (currentStep < 3) {
+      setCurrentStep(currentStep + 1);
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await onSubmit(formData);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+  const handleInputChange = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'BEGINNER': return 'text-green-500 bg-green-50 border-green-200';
+      case 'INTERMEDIATE': return 'text-yellow-500 bg-yellow-50 border-yellow-200';
+      case 'ADVANCED': return 'text-red-500 bg-red-50 border-red-200';
+      default: return 'text-gray-500 bg-gray-50 border-gray-200';
+    }
+  };
+
+  const renderStep1 = () => (
+    <div className="space-y-6">
+      <div className="text-center mb-6">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-primary flex items-center justify-center">
+          <BookOpen className="h-8 w-8 text-white" />
+        </div>
+        <h3 className="text-xl font-semibold text-foreground">Basic Information</h3>
+        <p className="text-muted-foreground">Let's start with the essential details of your program</p>
+      </div>
+
+      <div className="space-y-4">
         <div>
-          <Label htmlFor="name">Program Name</Label>
+          <Label htmlFor="name" className="text-sm font-medium text-foreground">
+            Program Name *
+          </Label>
           <Input
             id="name"
             value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            onChange={(e) => handleInputChange('name', e.target.value)}
+            placeholder="e.g., Yoga for Beginners, HIIT Transformation"
+            className="mt-1"
             required
           />
         </div>
+
         <div>
-          <Label htmlFor="difficulty">Difficulty</Label>
-          <Select value={formData.difficulty} onValueChange={(value) => setFormData({ ...formData, difficulty: value })}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="BEGINNER">Beginner</SelectItem>
-              <SelectItem value="INTERMEDIATE">Intermediate</SelectItem>
-              <SelectItem value="ADVANCED">Advanced</SelectItem>
-            </SelectContent>
-          </Select>
+          <Label htmlFor="description" className="text-sm font-medium text-foreground">
+            Program Description *
+          </Label>
+          <Textarea
+            id="description"
+            value={formData.description}
+            onChange={(e) => handleInputChange('description', e.target.value)}
+            placeholder="Describe what students will learn, the benefits, and what makes your program unique..."
+            className="mt-1 min-h-[100px]"
+            required
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="category" className="text-sm font-medium text-foreground">
+              Category *
+            </Label>
+            <Select 
+              value={formData.categoryId?.toString() || ''} 
+              onValueChange={(value) => handleInputChange('categoryId', parseInt(value))}
+            >
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id.toString()}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="location" className="text-sm font-medium text-foreground">
+              Location *
+            </Label>
+            <Select 
+              value={formData.locationId?.toString() || ''} 
+              onValueChange={(value) => handleInputChange('locationId', parseInt(value))}
+            >
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder="Select location" />
+              </SelectTrigger>
+              <SelectContent>
+                {locations.map((location) => (
+                  <SelectItem key={location.id} value={location.id.toString()}>
+                    {location.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
+    </div>
+  );
 
-      <div>
-        <Label htmlFor="description">Description</Label>
-        <Textarea
-          id="description"
-          value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          required
-        />
+  const renderStep2 = () => (
+    <div className="space-y-6">
+      <div className="text-center mb-6">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-primary flex items-center justify-center">
+          <Target className="h-8 w-8 text-white" />
+        </div>
+        <h3 className="text-xl font-semibold text-foreground">Program Details</h3>
+        <p className="text-muted-foreground">Set the difficulty, duration, and pricing for your program</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="space-y-4">
         <div>
-          <Label htmlFor="duration">Duration (weeks)</Label>
+          <Label className="text-sm font-medium text-foreground">Difficulty Level *</Label>
+          <div className="grid grid-cols-3 gap-3 mt-2">
+            {['BEGINNER', 'INTERMEDIATE', 'ADVANCED'].map((level) => (
+              <button
+                key={level}
+                type="button"
+                onClick={() => handleInputChange('difficultyLevel', level)}
+                className={`p-3 rounded-lg border-2 transition-all ${
+                  formData.difficultyLevel === level
+                    ? `${getDifficultyColor(level)} border-current`
+                    : 'border-border hover:border-primary/50'
+                }`}
+              >
+                <div className="text-sm font-medium capitalize">{level.toLowerCase()}</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  {level === 'BEGINNER' && 'Perfect for newcomers'}
+                  {level === 'INTERMEDIATE' && 'Some experience needed'}
+                  {level === 'ADVANCED' && 'For experienced practitioners'}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="duration" className="text-sm font-medium text-foreground">
+              Duration (weeks) *
+            </Label>
+            <Input
+              id="duration"
+              type="number"
+              min="1"
+              max="52"
+              value={formData.duration}
+              onChange={(e) => {
+                const value = parseInt(e.target.value);
+                handleInputChange('duration', isNaN(value) ? 1 : value);
+              }}
+              className="mt-1"
+              required
+            />
+            <p className="text-xs text-muted-foreground mt-1">Recommended: 4-12 weeks</p>
+          </div>
+
+          <div>
+            <Label htmlFor="price" className="text-sm font-medium text-foreground">
+              Price ($) *
+            </Label>
+            <Input
+              id="price"
+              type="number"
+              min="0"
+              step="0.01"
+              value={formData.price}
+              onChange={(e) => {
+                const value = parseFloat(e.target.value);
+                handleInputChange('price', isNaN(value) ? 0 : value);
+              }}
+              className="mt-1"
+              required
+            />
+            <p className="text-xs text-muted-foreground mt-1">Set to 0 for free programs</p>
+          </div>
+        </div>
+
+        <div>
+          <Label htmlFor="youtubeUrl" className="text-sm font-medium text-foreground">
+            YouTube URL (Optional)
+          </Label>
           <Input
-            id="duration"
-            type="number"
-            min="1"
-            value={formData.duration}
-            onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) })}
-            required
+            id="youtubeUrl"
+            value={formData.youtubeUrl}
+            onChange={(e) => handleInputChange('youtubeUrl', e.target.value)}
+            placeholder="https://www.youtube.com/watch?v=..."
+            className="mt-1"
           />
-        </div>
-        <div>
-          <Label htmlFor="price">Price ($)</Label>
-          <Input
-            id="price"
-            type="number"
-            min="0"
-            step="0.01"
-            value={formData.price}
-            onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
-            required
-          />
+          <p className="text-xs text-muted-foreground mt-1">Add a preview video for your program</p>
         </div>
       </div>
+    </div>
+  );
 
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
+  const renderStep3 = () => (
+    <div className="space-y-6">
+      <div className="text-center mb-6">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-primary flex items-center justify-center">
+          <CheckCircle className="h-8 w-8 text-white" />
+        </div>
+        <h3 className="text-xl font-semibold text-foreground">Review & Create</h3>
+        <p className="text-muted-foreground">Review your program details before creating</p>
+      </div>
+
+      <div className="space-y-4">
+        <Card variant="neumorphic" className="p-4">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-muted-foreground">Program Name</span>
+              <span className="font-semibold">{formData.name}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-muted-foreground">Category</span>
+              <span>{categories.find(c => c.id === formData.categoryId)?.name}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-muted-foreground">Location</span>
+              <span>{locations.find(l => l.id === formData.locationId)?.name}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-muted-foreground">Difficulty</span>
+              <Badge className={getDifficultyColor(formData.difficultyLevel)}>
+                {formData.difficultyLevel}
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-muted-foreground">Duration</span>
+              <span>{formData.duration} weeks</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-muted-foreground">Price</span>
+              <span className="font-semibold text-green-600">
+                ${formData.price === 0 ? 'Free' : formData.price}
+              </span>
+            </div>
+          </div>
+        </Card>
+
+        <div>
+          <Label className="text-sm font-medium text-foreground">Description</Label>
+          <div className="mt-2 p-3 rounded-lg bg-muted/50 text-sm">
+            {formData.description}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Progress Indicator */}
+      <div className="flex items-center justify-center space-x-4 mb-6">
+        {[1, 2, 3].map((step) => (
+          <div key={step} className="flex items-center">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+              step <= currentStep 
+                ? 'bg-gradient-primary text-white' 
+                : 'bg-muted text-muted-foreground'
+            }`}>
+              {step}
+            </div>
+            {step < 3 && (
+              <div className={`w-12 h-0.5 mx-2 ${
+                step < currentStep ? 'bg-gradient-primary' : 'bg-muted'
+              }`} />
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Step Content */}
+      {currentStep === 1 && renderStep1()}
+      {currentStep === 2 && renderStep2()}
+      {currentStep === 3 && renderStep3()}
+
+      {/* Navigation Buttons */}
+      <div className="flex justify-between pt-6 border-t">
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={currentStep === 1 ? onCancel : () => setCurrentStep(currentStep - 1)}
+        >
+          {currentStep === 1 ? 'Cancel' : 'Back'}
         </Button>
-        <Button type="submit">
-          Create Program
+        
+        <Button 
+          type="submit" 
+          disabled={isSubmitting}
+          className="min-w-[120px]"
+        >
+          {isSubmitting ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+              Creating...
+            </>
+          ) : currentStep === 3 ? (
+            'Create Program'
+          ) : (
+            'Next'
+          )}
         </Button>
       </div>
     </form>

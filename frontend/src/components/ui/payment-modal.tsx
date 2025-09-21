@@ -18,7 +18,7 @@ interface PaymentModalProps {
     id: number;
     name: string;
     price: number;
-    difficulty: string;
+    difficultyLevel: string;
     description: string;
   };
 }
@@ -172,7 +172,7 @@ export const PaymentModal = ({ isOpen, onClose, program }: PaymentModalProps) =>
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Difficulty</span>
-                <Badge variant="secondary">{program.difficulty || "Unknown"}</Badge>
+                <Badge variant="secondary">{program.difficultyLevel || "Unknown"}</Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Price</span>

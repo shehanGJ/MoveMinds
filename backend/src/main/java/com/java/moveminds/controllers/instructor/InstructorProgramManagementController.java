@@ -39,15 +39,17 @@ public class InstructorProgramManagementController {
      */
     @PostMapping
     public ResponseEntity<FitnessProgramResponse> createProgram(
-            @RequestPart("program") @Valid InstructorProgramRequest programRequest,
-            @RequestPart(value = "files", required = false) List<MultipartFile> files,
+            @RequestBody @Valid InstructorProgramRequest programRequest,
             Principal principal) {
         
         log.info("Instructor {} creating new program: {}", principal.getName(), programRequest.getName());
+        log.info("Program request data: name={}, description={}, difficultyLevel={}, duration={}, price={}, categoryId={}, locationId={}", 
+                programRequest.getName(), programRequest.getDescription(), programRequest.getDifficultyLevel(), 
+                programRequest.getDuration(), programRequest.getPrice(), programRequest.getCategoryId(), programRequest.getLocationId());
         
         try {
             FitnessProgramResponse response = instructorProgramManagementService.createProgram(
-                    principal, programRequest, files);
+                    principal, programRequest, null);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (IOException e) {
             log.error("Error creating program: {}", e.getMessage());

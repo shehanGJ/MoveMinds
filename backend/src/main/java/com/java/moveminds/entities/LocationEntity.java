@@ -19,6 +19,7 @@ public class LocationEntity {
     private String name;
     @JsonIgnore
     @OneToMany(mappedBy = "location")
+    @ToString.Exclude
     private List<FitnessProgramEntity> fitnessPrograms;
 
 }

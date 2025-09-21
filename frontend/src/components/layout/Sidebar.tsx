@@ -39,8 +39,8 @@ const adminItems = [
   { label: "User Management", href: "/admin/users", icon: Users },
   { label: "Programs", href: "/admin/programs", icon: Dumbbell },
   { label: "System Analytics", href: "/admin/analytics", icon: BarChart3 },
-  { label: "Messages", href: "/dashboard/messages", icon: MessageCircle },
-  { label: "Profile", href: "/dashboard/profile", icon: User },
+  { label: "Messages", href: "/admin/messages", icon: MessageCircle },
+  { label: "Profile", href: "/admin/profile", icon: User },
 ];
 
 // Instructor specific items
@@ -50,6 +50,8 @@ const instructorItems = [
   { label: "Students", href: "/instructor/students", icon: Users },
   { label: "Analytics", href: "/instructor/analytics", icon: BarChart3 },
   { label: "Schedule", href: "/instructor/schedule", icon: Calendar },
+  { label: "Messages", href: "/instructor/messages", icon: MessageCircle },
+  { label: "Profile", href: "/instructor/profile", icon: User },
 ];
 
 export const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
@@ -80,10 +82,10 @@ export const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
       
       {/* Sidebar */}
       <aside className={cn(
-        "fixed left-0 top-16 z-50 h-[calc(100vh-4rem)] w-64 transform transition-transform duration-200 ease-in-out md:relative md:top-0 md:h-screen md:translate-x-0",
+        "fixed left-0 top-16 z-50 h-[calc(100vh-4rem)] w-64 transform transition-transform duration-200 ease-in-out md:fixed md:top-16 md:h-[calc(100vh-4rem)] md:translate-x-0",
         open ? "translate-x-0" : "-translate-x-full"
       )}>
-        <Card variant="neumorphic" padding="sm" className="h-full border-r border-l-0 rounded-none md:rounded-r-xl">
+        <Card variant="neumorphic" padding="sm" className="h-full border-r border-l-0 rounded-none md:rounded-r-xl flex flex-col">
           <div className="flex items-center justify-between p-4 border-b md:hidden">
             <span className="font-semibold">Menu</span>
             <Button
@@ -95,7 +97,7 @@ export const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
             </Button>
           </div>
           
-          <nav className="p-4 space-y-2">
+          <nav className="p-4 space-y-2 flex-1">
             {itemsToShow.map((item) => {
               const isActive = location.pathname === item.href;
               const Icon = item.icon;
@@ -119,7 +121,7 @@ export const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
             })}
           </nav>
           
-          <div className="absolute bottom-4 left-4 right-4">
+          <div className="p-4 mt-auto">
             <Card variant="gradient" padding="sm" className="text-center">
               <p className="text-xs font-medium">Upgrade to Pro</p>
               <p className="text-xs text-muted-foreground mt-1">
