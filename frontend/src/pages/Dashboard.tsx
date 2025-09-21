@@ -34,7 +34,7 @@ export const Dashboard = () => {
     const cleanRole = userRole?.replace('ROLE_', '') || 'USER';
     if (cleanRole === 'ADMIN') {
       console.log('Dashboard: Redirecting admin to admin dashboard');
-      navigate('/admin/dashboard');
+      navigate('/admin');
       return;
     } else if (cleanRole === 'INSTRUCTOR') {
       console.log('Dashboard: Redirecting instructor to instructor dashboard');
@@ -210,7 +210,7 @@ export const Dashboard = () => {
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
-            <Card key={stat.title} className="relative overflow-hidden bg-gradient-card border-border shadow-subtle hover:shadow-card transition-all duration-200">
+            <Card key={stat.title} variant="neumorphic" className="hover:shadow-glow transition-all duration-300">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -244,7 +244,8 @@ export const Dashboard = () => {
             return (
               <Card
                 key={action.title}
-                className="group hover:scale-105 transition-all duration-200 bg-gradient-card border-border shadow-subtle hover:shadow-card"
+                variant="neumorphic"
+                className="group hover:shadow-glow transition-all duration-300"
               >
                 <CardContent className="p-6 text-center">
                   <div className="w-16 h-16 bg-gradient-primary/20 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-gradient-primary/30 transition-all duration-200 shadow-subtle">
@@ -272,30 +273,69 @@ export const Dashboard = () => {
             <Link to="/activities">View All</Link>
           </Button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {activities.length > 0 ? (
-            activities.slice(0, 3).map((activity) => (
-              <Card key={activity.id} variant="elevated" className="group cursor-pointer">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge variant="secondary" className="text-xs">
-                      {activity.activityType}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(activity.logDate).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <h3 className="font-semibold mb-2">
-                    {activity.activityType} Session
-                  </h3>
-                  <div className="space-y-1 text-sm text-muted-foreground">
-                    <p>Duration: {activity.duration} minutes</p>
-                    <p>Intensity: {activity.intensity}</p>
-                    {activity.result && <p>Result: {activity.result}</p>}
-                  </div>
-                </CardContent>
-              </Card>
-            ))
+            activities.slice(0, 3).map((activity) => {
+              const getActivityIcon = (type: string) => {
+                switch (type.toLowerCase()) {
+                  case 'running': return '🏃';
+                  case 'cycling': return '🚴';
+                  case 'swimming': return '🏊';
+                  case 'weightlifting': return '🏋️';
+                  case 'yoga': return '🧘';
+                  case 'cardio': return '❤️';
+                  default: return '💪';
+                }
+              };
+
+              const getIntensityColor = (intensity: string) => {
+                switch (intensity.toLowerCase()) {
+                  case 'low': return 'text-green-500 bg-green-500/10';
+                  case 'medium': return 'text-yellow-500 bg-yellow-500/10';
+                  case 'high': return 'text-red-500 bg-red-500/10';
+                  default: return 'text-blue-500 bg-blue-500/10';
+                }
+              };
+
+              return (
+                <Card key={activity.id} variant="neumorphic" className="group cursor-pointer hover:shadow-glow transition-all duration-300">
+                  <CardContent className="p-3">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="text-2xl">{getActivityIcon(activity.activityType)}</div>
+                        <div>
+                          <h3 className="font-semibold text-sm leading-tight">
+                            {activity.activityType}
+                          </h3>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(activity.logDate).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      <Badge className={`text-xs px-2 py-1 ${getIntensityColor(activity.intensity)}`}>
+                        {activity.intensity}
+                      </Badge>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          <span>{activity.duration}m</span>
+                        </div>
+                        {activity.result && (
+                          <div className="flex items-center gap-1">
+                            <Target className="w-3 h-3" />
+                            <span>{activity.result}</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="w-2 h-2 bg-primary rounded-full opacity-60"></div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })
           ) : (
             <Card variant="neumorphic" className="col-span-full">
               <CardContent className="p-8 text-center">
@@ -326,7 +366,7 @@ export const Dashboard = () => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {conversations.slice(0, 3).map((conversation) => (
-              <Card key={conversation.id} variant="elevated" className="group cursor-pointer">
+              <Card key={conversation.id} variant="neumorphic" className="group cursor-pointer hover:shadow-glow transition-all duration-300">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Badge variant="secondary" className="text-xs">

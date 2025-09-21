@@ -38,8 +38,8 @@ public class UserEntity implements UserDetails {
     @Column(name = "role", nullable = false)
     private Roles role;
     @Basic
-    @Column(name = "is_activated", nullable = false)
-    private boolean isActivated = false;
+    @Column(name = "is_verified", nullable = false)
+    private boolean isVerified = false;
     @Basic
     @Column(name = "avatar_url")
     private String avatarUrl;

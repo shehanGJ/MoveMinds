@@ -10,7 +10,6 @@ import org.springframework.stereotype.Repository;
 import com.java.moveminds.entities.UserEntity;
 import com.java.moveminds.enums.Roles;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,18 +22,19 @@ public interface UserEntityRepository extends JpaRepository<UserEntity, Integer>
     
     // Admin service methods
     long countByRole(Roles role);
-    long countByIsActivated(boolean isActivated);
-    long countByIsActivatedTrue();
+    long countByIsVerified(boolean isVerified);
+    long countByIsVerifiedTrue();
+    long countByIsVerifiedFalse();
     Page<UserEntity> findByRole(Roles role, Pageable pageable);
     Page<UserEntity> findByUsernameContainingIgnoreCase(String username, Pageable pageable);
     Page<UserEntity> findByRoleAndUsernameContainingIgnoreCase(Roles role, String username, Pageable pageable);
     List<UserEntity> findByRole(Roles role);
     
     // Enhanced query methods for admin operations
-    @Query("SELECT u FROM UserEntity u WHERE u.role = :role AND u.isActivated = :isActivated")
-    List<UserEntity> findByRoleAndIsActivated(@Param("role") Roles role, @Param("isActivated") boolean isActivated);
+    @Query("SELECT u FROM UserEntity u WHERE u.role = :role AND u.isVerified = :isVerified")
+    List<UserEntity> findByRoleAndIsVerified(@Param("role") Roles role, @Param("isVerified") boolean isVerified);
     
-    @Query("SELECT COUNT(u) FROM UserEntity u WHERE u.role = :role AND u.isActivated = true")
+    @Query("SELECT COUNT(u) FROM UserEntity u WHERE u.role = :role AND u.isVerified = true")
     long countActiveUsersByRole(@Param("role") Roles role);
     
     @Query("SELECT u FROM UserEntity u WHERE u.role = :role ORDER BY u.id DESC")

@@ -129,7 +129,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         // Validate the token
         if (jwtService.isTokenValid(token, user)) {
             // Activate the user account
-            user.setActivated(true);
+            user.setVerified(true);
             userRepository.saveAndFlush(user);
             return true;
         }

@@ -3,7 +3,9 @@ package com.java.moveminds.controllers.admin;
 import com.java.moveminds.dto.requests.admin.AdminBulkActionRequest;
 import com.java.moveminds.dto.requests.admin.AdminUserManagementRequest;
 import com.java.moveminds.dto.response.AdminUserResponse;
+import com.java.moveminds.entities.UserEntity;
 import com.java.moveminds.enums.Roles;
+import com.java.moveminds.repositories.UserEntityRepository;
 import com.java.moveminds.services.admin.AdminUserManagementService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +21,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
 
 /**
@@ -33,6 +37,7 @@ import java.util.List;
 public class AdminUserManagementController {
     
     private final AdminUserManagementService adminUserManagementService;
+    private final UserEntityRepository userRepository;
     
     /**
      * Get paginated list of users with advanced filtering
@@ -45,19 +50,46 @@ public class AdminUserManagementController {
             @RequestParam(value = "direction", defaultValue = "desc") String direction,
             @RequestParam(value = "role", required = false) Roles role,
             @RequestParam(value = "search", required = false) String search,
-            @RequestParam(value = "isActivated", required = false) Boolean isActivated,
+            @RequestParam(value = "isVerified", required = false) Boolean isVerified,
             Principal principal) {
         
-        log.info("Admin {} requesting users list with filters: role={}, search={}, isActivated={}", 
-                principal.getName(), role, search, isActivated);
+        log.info("Admin {} requesting users list with filters: role={}, search={}, isVerified={}", 
+                principal.getName(), role, search, isVerified);
         
         Sort sortObj = Sort.by(Sort.Direction.fromString(direction), sort);
         Pageable pageable = PageRequest.of(page, size, sortObj);
         
         Page<AdminUserResponse> users = adminUserManagementService.getAllUsers(
-                principal, pageable, role, search, isActivated);
+                principal, pageable, role, search, isVerified);
         
         return ResponseEntity.ok(users);
+    }
+    
+    /**
+     * Debug endpoint to check user verification status
+     */
+    @GetMapping("/debug/{userId}")
+    public ResponseEntity<Map<String, Object>> debugUserStatus(@PathVariable Integer userId, Principal principal) {
+        log.info("Admin {} requesting debug info for user ID: {}", principal.getName(), userId);
+        
+        Map<String, Object> debugInfo = new HashMap<>();
+        
+        try {
+            UserEntity user = userRepository.findById(userId).orElse(null);
+            if (user != null) {
+                debugInfo.put("userId", user.getId());
+                debugInfo.put("username", user.getUsername());
+                debugInfo.put("isVerified", user.isVerified());
+                debugInfo.put("email", user.getEmail());
+                debugInfo.put("role", user.getRole());
+            } else {
+                debugInfo.put("error", "User not found");
+            }
+        } catch (Exception e) {
+            debugInfo.put("error", e.getMessage());
+        }
+        
+        return ResponseEntity.ok(debugInfo);
     }
     
     /**

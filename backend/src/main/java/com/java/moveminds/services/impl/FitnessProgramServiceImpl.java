@@ -166,7 +166,8 @@ public class FitnessProgramServiceImpl implements FitnessProgramService {
     }
 
     /**
-     * Retrieves all fitness programs with pagination.
+     * Retrieves all active fitness programs with pagination.
+     * Only returns programs that have been activated by admin.
      *
      * @param pageable the pagination information
      * @return a Page of FitnessProgramHomeResponse objects
@@ -174,8 +175,8 @@ public class FitnessProgramServiceImpl implements FitnessProgramService {
     @Override
     @Transactional
     public Page<FitnessProgramHomeResponse> getAllFitnessPrograms(Pageable pageable) {
-        Page<FitnessProgramEntity> programs = fitnessProgramRepository.findAll(pageable);
-        logService.log(null, "Overview of all fitness programs");
+        Page<FitnessProgramEntity> programs = fitnessProgramRepository.findByIsActive(true, pageable);
+        logService.log(null, "Overview of all active fitness programs");
         return programs.map(this::getFitnessProgramHomeResponse);
     }
 

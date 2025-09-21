@@ -3,6 +3,7 @@ package com.java.moveminds.services.impl;
 import com.java.moveminds.dto.response.admin.*;
 import com.java.moveminds.entities.FitnessProgramEntity;
 import com.java.moveminds.entities.UserEntity;
+import com.java.moveminds.entities.UserProgramEntity;
 import com.java.moveminds.enums.DifficultyLevel;
 import com.java.moveminds.enums.Roles;
 import com.java.moveminds.repositories.FitnessProgramEntityRepository;
@@ -44,9 +45,12 @@ public class AdminAnalyticsServiceImpl implements AdminAnalyticsService {
         
         // Get basic counts
         long totalUsers = userRepository.count();
+        long verifiedUsers = userRepository.countByIsVerifiedTrue();
+        long notVerifiedUsers = userRepository.countByIsVerifiedFalse();
         long totalInstructors = userRepository.countByRole(Roles.INSTRUCTOR);
         long totalPrograms = fitnessProgramRepository.count();
         long activePrograms = fitnessProgramRepository.countByIsActiveTrue();
+        long inactivePrograms = fitnessProgramRepository.countByIsActiveFalse();
         long totalEnrollments = userProgramRepository.count();
         
         // Calculate revenue (simplified calculation)
@@ -100,10 +104,12 @@ public class AdminAnalyticsServiceImpl implements AdminAnalyticsService {
         // Create response using builder pattern
         AdminAnalyticsResponse response = AdminAnalyticsResponse.builder()
                 .totalUsers(totalUsers)
+                .verifiedUsers(verifiedUsers)
+                .notVerifiedUsers(notVerifiedUsers)
                 .totalInstructors(totalInstructors)
                 .totalPrograms(totalPrograms)
                 .activePrograms(activePrograms)
-                .inactivePrograms(fitnessProgramRepository.countByIsActiveFalse())
+                .inactivePrograms(inactivePrograms)
                 .totalEnrollments(totalEnrollments)
                 .totalRevenue(totalRevenue)
                 .averageRating(averageRating)
@@ -458,10 +464,23 @@ public class AdminAnalyticsServiceImpl implements AdminAnalyticsService {
     
     private BigDecimal calculateTotalRevenue() {
         try {
-            return fitnessProgramRepository.findAll().stream()
-                    .map(program -> program.getPrice().multiply(BigDecimal.valueOf(
-                            userProgramRepository.countByFitnessProgramByProgramId(program))))
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            log.info("Calculating total revenue from all enrollments");
+            
+            // Calculate total revenue from all enrollments
+            List<UserProgramEntity> enrollments = userProgramRepository.findAll();
+            log.info("Found {} enrollments", enrollments.size());
+            
+            BigDecimal totalRevenue = BigDecimal.ZERO;
+            for (UserProgramEntity enrollment : enrollments) {
+                BigDecimal programPrice = enrollment.getFitnessProgramByProgramId().getPrice();
+                if (programPrice != null) {
+                    totalRevenue = totalRevenue.add(programPrice);
+                    log.debug("Added program price {} to total revenue", programPrice);
+                }
+            }
+            
+            log.info("Total revenue calculated: {}", totalRevenue);
+            return totalRevenue;
         } catch (Exception e) {
             log.warn("Error calculating total revenue: {}", e.getMessage());
             return BigDecimal.ZERO;
@@ -471,11 +490,36 @@ public class AdminAnalyticsServiceImpl implements AdminAnalyticsService {
     private BigDecimal calculateMonthlyRevenue() {
         try {
             LocalDate startOfMonth = LocalDate.now().withDayOfMonth(1);
-            return fitnessProgramRepository.findByCreatedAtAfter(startOfMonth.atStartOfDay())
-                    .stream()
-                    .map(program -> program.getPrice().multiply(BigDecimal.valueOf(
-                            userProgramRepository.countByFitnessProgramByProgramId(program))))
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            LocalDateTime startOfMonthDateTime = startOfMonth.atStartOfDay();
+            
+            log.info("Calculating monthly revenue from: {}", startOfMonthDateTime);
+            
+            // First, try the new method with created_at field
+            try {
+                BigDecimal monthlyRevenue = userProgramRepository.calculateRevenueAfter(startOfMonthDateTime);
+                log.info("Monthly revenue from created_at field: {}", monthlyRevenue);
+                return monthlyRevenue != null ? monthlyRevenue : BigDecimal.ZERO;
+            } catch (Exception e) {
+                log.warn("Error with created_at field, falling back to start_date: {}", e.getMessage());
+                
+                // Fallback: calculate revenue using start_date if created_at doesn't exist
+                List<UserProgramEntity> enrollments = userProgramRepository.findAll();
+                BigDecimal totalRevenue = BigDecimal.ZERO;
+                
+                for (UserProgramEntity enrollment : enrollments) {
+                    // Check if enrollment started this month
+                    LocalDate enrollmentDate = enrollment.getStartDate().toLocalDate();
+                    if (enrollmentDate.isAfter(startOfMonth.minusDays(1))) {
+                        BigDecimal programPrice = enrollment.getFitnessProgramByProgramId().getPrice();
+                        if (programPrice != null) {
+                            totalRevenue = totalRevenue.add(programPrice);
+                        }
+                    }
+                }
+                
+                log.info("Monthly revenue from start_date fallback: {}", totalRevenue);
+                return totalRevenue;
+            }
         } catch (Exception e) {
             log.warn("Error calculating monthly revenue: {}", e.getMessage());
             return BigDecimal.ZERO;
@@ -485,11 +529,12 @@ public class AdminAnalyticsServiceImpl implements AdminAnalyticsService {
     private BigDecimal calculateDailyRevenue() {
         try {
             LocalDate today = LocalDate.now();
-            return fitnessProgramRepository.findByCreatedAtAfter(today.atStartOfDay())
-                    .stream()
-                    .map(program -> program.getPrice().multiply(BigDecimal.valueOf(
-                            userProgramRepository.countByFitnessProgramByProgramId(program))))
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            LocalDateTime startOfDay = today.atStartOfDay();
+            LocalDateTime endOfDay = today.plusDays(1).atStartOfDay();
+            
+            // Calculate revenue from enrollments made today
+            BigDecimal dailyRevenue = userProgramRepository.calculateRevenueBetween(startOfDay, endOfDay);
+            return dailyRevenue != null ? dailyRevenue : BigDecimal.ZERO;
         } catch (Exception e) {
             log.warn("Error calculating daily revenue: {}", e.getMessage());
             return BigDecimal.ZERO;
@@ -501,15 +546,79 @@ public class AdminAnalyticsServiceImpl implements AdminAnalyticsService {
     }
     
     private List<RevenueAnalyticsResponse.RevenueDataPoint> generateDailyRevenueData(LocalDate startDate, LocalDate endDate) {
-        return new ArrayList<>();
+        List<RevenueAnalyticsResponse.RevenueDataPoint> dataPoints = new ArrayList<>();
+        
+        LocalDate currentDate = startDate;
+        while (!currentDate.isAfter(endDate)) {
+            LocalDateTime startOfDay = currentDate.atStartOfDay();
+            LocalDateTime endOfDay = currentDate.plusDays(1).atStartOfDay();
+            
+            BigDecimal dailyRevenue = userProgramRepository.calculateRevenueBetween(startOfDay, endOfDay);
+            if (dailyRevenue == null) dailyRevenue = BigDecimal.ZERO;
+            
+            dataPoints.add(RevenueAnalyticsResponse.RevenueDataPoint.builder()
+                    .date(currentDate.toString())
+                    .amount(dailyRevenue)
+                    .build());
+            
+            currentDate = currentDate.plusDays(1);
+        }
+        
+        return dataPoints;
     }
     
     private List<RevenueAnalyticsResponse.RevenueDataPoint> generateWeeklyRevenueData(LocalDate startDate, LocalDate endDate) {
-        return new ArrayList<>();
+        List<RevenueAnalyticsResponse.RevenueDataPoint> dataPoints = new ArrayList<>();
+        
+        LocalDate currentDate = startDate.with(java.time.DayOfWeek.MONDAY);
+        while (!currentDate.isAfter(endDate)) {
+            LocalDate weekEnd = currentDate.plusDays(6);
+            if (weekEnd.isAfter(endDate)) {
+                weekEnd = endDate;
+            }
+            
+            LocalDateTime startOfWeek = currentDate.atStartOfDay();
+            LocalDateTime endOfWeek = weekEnd.plusDays(1).atStartOfDay();
+            
+            BigDecimal weeklyRevenue = userProgramRepository.calculateRevenueBetween(startOfWeek, endOfWeek);
+            if (weeklyRevenue == null) weeklyRevenue = BigDecimal.ZERO;
+            
+            dataPoints.add(RevenueAnalyticsResponse.RevenueDataPoint.builder()
+                    .date(currentDate.toString() + " - " + weekEnd.toString())
+                    .amount(weeklyRevenue)
+                    .build());
+            
+            currentDate = currentDate.plusWeeks(1);
+        }
+        
+        return dataPoints;
     }
     
     private List<RevenueAnalyticsResponse.RevenueDataPoint> generateMonthlyRevenueData(LocalDate startDate, LocalDate endDate) {
-        return new ArrayList<>();
+        List<RevenueAnalyticsResponse.RevenueDataPoint> dataPoints = new ArrayList<>();
+        
+        LocalDate currentDate = startDate.withDayOfMonth(1);
+        while (!currentDate.isAfter(endDate)) {
+            LocalDate monthEnd = currentDate.withDayOfMonth(currentDate.lengthOfMonth());
+            if (monthEnd.isAfter(endDate)) {
+                monthEnd = endDate;
+            }
+            
+            LocalDateTime startOfMonth = currentDate.atStartOfDay();
+            LocalDateTime endOfMonth = monthEnd.plusDays(1).atStartOfDay();
+            
+            BigDecimal monthlyRevenue = userProgramRepository.calculateRevenueBetween(startOfMonth, endOfMonth);
+            if (monthlyRevenue == null) monthlyRevenue = BigDecimal.ZERO;
+            
+            dataPoints.add(RevenueAnalyticsResponse.RevenueDataPoint.builder()
+                    .date(currentDate.toString().substring(0, 7)) // YYYY-MM format
+                    .amount(monthlyRevenue)
+                    .build());
+            
+            currentDate = currentDate.plusMonths(1);
+        }
+        
+        return dataPoints;
     }
     
     private List<RevenueAnalyticsResponse.RevenueSource> getRevenueBySource() {

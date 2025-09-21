@@ -39,9 +39,9 @@ public class AdminUserSpecification {
         };
     }
     
-    public static Specification<UserEntity> isActivated(Boolean isActivated) {
+    public static Specification<UserEntity> isVerified(Boolean isVerified) {
         return (root, query, criteriaBuilder) -> 
-            isActivated != null ? criteriaBuilder.equal(root.get("isActivated"), isActivated) : null;
+            isVerified != null ? criteriaBuilder.equal(root.get("isVerified"), isVerified) : null;
     }
     
     
@@ -65,18 +65,18 @@ public class AdminUserSpecification {
     }
     
     public static Specification<UserEntity> buildSpecification(
-            Roles role, String searchTerm, Boolean isActivated, 
+            Roles role, String searchTerm, Boolean isVerified, 
             LocalDateTime createdAfter, LocalDateTime createdBefore, 
             Integer cityId, Boolean hasPrograms, Boolean hasEnrollments) {
         
         Specification<UserEntity> spec = Specification.where(hasRole(role))
                 .and(hasSearchTerm(searchTerm))
-                .and(isActivated(isActivated))
+                .and(isVerified(isVerified))
                 .and(hasCity(cityId))
                 .and(hasPrograms != null && hasPrograms ? hasPrograms() : null)
                 .and(hasEnrollments != null && hasEnrollments ? hasEnrollments() : null);
         
-        System.out.println("AdminUserSpecification - role: " + role + ", searchTerm: " + searchTerm + ", isActivated: " + isActivated);
+        System.out.println("AdminUserSpecification - role: " + role + ", searchTerm: " + searchTerm + ", isVerified: " + isVerified);
         
         return spec;
     }

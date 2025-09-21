@@ -39,7 +39,7 @@ public class AdminServiceImpl implements AdminService {
         // Additional stats would be calculated from other repositories
         return AdminStatsResponse.builder()
                 .totalUsers(totalUsers)
-                .activeUsers(userRepository.countByIsActivated(true))
+                .activeUsers(userRepository.countByIsVerified(true))
                 .totalInstructors(totalInstructors)
                 .totalAdmins(totalAdmins)
                 .totalPrograms(0L) // TODO: Implement from FitnessProgramRepository
@@ -105,7 +105,7 @@ public class AdminServiceImpl implements AdminService {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
         
-        user.setActivated(active);
+        user.setVerified(active);
         UserEntity savedUser = userRepository.save(user);
         
         return mapToAdminUserResponse(savedUser);
@@ -199,7 +199,7 @@ public class AdminServiceImpl implements AdminService {
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .role(user.getRole())
-                .isActivated(user.isActivated())
+                .isVerified(user.isVerified())
                 .avatarUrl(user.getAvatarUrl())
                 .biography(user.getBiography())
                 .cityName(user.getCity() != null ? user.getCity().getName() : null)

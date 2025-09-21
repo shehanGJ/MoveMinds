@@ -52,7 +52,7 @@ export const Login = () => {
       // Redirect based on role (remove ROLE_ prefix if present)
       const cleanRole = role.replace('ROLE_', '');
       if (cleanRole === 'ADMIN') {
-        navigate("/admin/dashboard");
+        navigate("/admin");
       } else if (cleanRole === 'INSTRUCTOR') {
         navigate("/instructor/dashboard");
       } else {
@@ -74,7 +74,7 @@ export const Login = () => {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
-            <div className="w-12 h-12 rounded-full bg-gradient-primary flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-gradient-primary flex items-center justify-center shadow-lg">
               <Dumbbell className="w-6 h-6 text-white" />
             </div>
             <span className="text-2xl font-bold text-white">MoveMinds</span>
@@ -83,22 +83,29 @@ export const Login = () => {
           <p className="text-white/80">Sign in to continue your fitness journey</p>
         </div>
 
-        <Card variant="neumorphic" className="bg-white/95 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle>Sign In</CardTitle>
-            <CardDescription>
-              Enter your credentials to access your account
-            </CardDescription>
+        <Card variant="neumorphic" className="hover:shadow-glow transition-all duration-300">
+          <CardHeader className="pb-4">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-lg bg-gradient-primary flex items-center justify-center">
+                <Dumbbell className="w-5 h-5 text-black" />
+              </div>
+              <div>
+                <CardTitle className="text-xl text-foreground">Sign In</CardTitle>
+                <CardDescription className="text-muted-foreground">
+                  Enter your credentials to access your account
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="emailOrUsername">Email or Username</Label>
+                <Label htmlFor="emailOrUsername" className="text-foreground font-medium">Email or Username</Label>
                 <Input
                   id="emailOrUsername"
                   placeholder="Enter your email or username"
                   {...register("emailOrUsername")}
-                  className={errors.emailOrUsername ? "border-destructive" : ""}
+                  className={`bg-background/50 border-border/50 text-foreground placeholder:text-muted-foreground focus:border-primary ${errors.emailOrUsername ? "border-destructive" : ""}`}
                 />
                 {errors.emailOrUsername && (
                   <p className="text-sm text-destructive">
@@ -108,20 +115,20 @@ export const Login = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password" className="text-foreground font-medium">Password</Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
                     {...register("password")}
-                    className={errors.password ? "border-destructive pr-10" : "pr-10"}
+                    className={`bg-background/50 border-border/50 text-foreground placeholder:text-muted-foreground focus:border-primary pr-10 ${errors.password ? "border-destructive" : ""}`}
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="absolute right-0 top-0 h-full px-3"
+                    className="absolute right-0 top-0 h-full px-3 text-muted-foreground hover:text-foreground"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
@@ -142,26 +149,42 @@ export const Login = () => {
                 type="submit"
                 variant="hero"
                 size="lg"
-                className="w-full"
+                className="w-full h-12 text-black font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
                 disabled={isLoading}
               >
-                {isLoading ? "Signing In..." : "Sign In"}
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black mr-2" />
+                    Signing In...
+                  </>
+                ) : (
+                  "Sign In"
+                )}
               </Button>
             </form>
 
-            <div className="mt-6 text-center space-y-2">
+            <div className="mt-8 text-center space-y-3">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-border/30" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">Or</span>
+                </div>
+              </div>
+              
               <p className="text-sm text-muted-foreground">
                 Don't have an account?{" "}
                 <Link
                   to="/signup"
-                  className="font-medium text-primary hover:text-primary-dark transition-colors"
+                  className="font-semibold text-primary hover:text-primary/80 transition-colors"
                 >
                   Sign up
                 </Link>
               </p>
               <Link
                 to="/forgot-password"
-                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                className="text-sm text-muted-foreground hover:text-primary transition-colors underline-offset-4 hover:underline"
               >
                 Forgot your password?
               </Link>

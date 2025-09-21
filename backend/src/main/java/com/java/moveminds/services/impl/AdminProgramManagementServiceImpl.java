@@ -128,6 +128,11 @@ public class AdminProgramManagementServiceImpl implements AdminProgramManagement
     private AdminProgramResponse convertToAdminProgramResponse(FitnessProgramEntity program) {
         AdminProgramResponse response = modelMapper.map(program, AdminProgramResponse.class);
         
+        // Explicitly set isActive to ensure it's not overridden by ModelMapper
+        response.setActive(program.getIsActive());
+        log.debug("Program {} - Database isActive: {}, Response isActive: {}", 
+                 program.getId(), program.getIsActive(), response.isActive());
+        
         // Map instructor information
         if (program.getUser() != null) {
             response.setInstructorId(program.getUser().getId());
@@ -164,8 +169,9 @@ public class AdminProgramManagementServiceImpl implements AdminProgramManagement
         
         // Set default values
         response.setAverageRating(0.0);
-        response.setStatus("ACTIVE");
-        response.setActive(true);
+        
+        // Set status based on actual database value
+        response.setStatus(program.getIsActive() ? "ACTIVE" : "INACTIVE");
         
         return response;
     }

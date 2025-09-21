@@ -20,7 +20,7 @@ public class AdminUserResponse {
     private String firstName;
     private String lastName;
     private Roles role;
-    private boolean isActivated;
+    private boolean isVerified;
     private String avatarUrl;
     private String biography;
     private LocalDateTime createdAt;

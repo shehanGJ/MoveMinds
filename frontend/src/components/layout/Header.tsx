@@ -24,7 +24,7 @@ export const Header = ({ onMenuToggle }: HeaderProps) => {
   // Get the appropriate dashboard URL based on role
   const getDashboardUrl = () => {
     const cleanRole = userRole.replace('ROLE_', '');
-    if (cleanRole === 'ADMIN') return '/admin/dashboard';
+    if (cleanRole === 'ADMIN') return '/admin';
     if (cleanRole === 'INSTRUCTOR') return '/instructor/dashboard';
     return '/dashboard';
   };

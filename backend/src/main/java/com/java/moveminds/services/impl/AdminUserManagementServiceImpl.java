@@ -41,13 +41,13 @@ public class AdminUserManagementServiceImpl implements AdminUserManagementServic
     @Override
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public Page<AdminUserResponse> getAllUsers(Principal principal, Pageable pageable, 
-                                             Roles role, String search, Boolean isActivated) {
-        log.info("Admin {} requesting users with filters: role={}, search={}, isActivated={}", 
-                principal.getName(), role, search, isActivated);
+                                             Roles role, String search, Boolean isVerified) {
+        log.info("Admin {} requesting users with filters: role={}, search={}, isVerified={}", 
+                principal.getName(), role, search, isVerified);
         
         // Build specification for filtering
         Specification<UserEntity> spec = AdminUserSpecification.buildSpecification(
-                role, search, isActivated, null, null, null, null, null);
+                role, search, isVerified, null, null, null, null, null);
         
         Page<UserEntity> users = userRepository.findAll(spec, pageable);
         
@@ -92,7 +92,7 @@ public class AdminUserManagementServiceImpl implements AdminUserManagementServic
         user.setRole(request.getRole());
         user.setBiography(request.getBiography());
         user.setAvatarUrl(request.getAvatarUrl());
-        user.setActivated(request.getIsActivated() != null ? request.getIsActivated() : true);
+        user.setVerified(request.getIsVerified() != null ? request.getIsVerified() : false);
         user.setPassword(passwordEncoder.encode("TempPassword123!")); // Default password
         
         UserEntity savedUser = userRepository.save(user);
@@ -137,8 +137,8 @@ public class AdminUserManagementServiceImpl implements AdminUserManagementServic
         user.setBiography(request.getBiography());
         user.setAvatarUrl(request.getAvatarUrl());
         
-        if (request.getIsActivated() != null) {
-            user.setActivated(request.getIsActivated());
+        if (request.getIsVerified() != null) {
+            user.setVerified(request.getIsVerified());
         }
         
         UserEntity updatedUser = userRepository.save(user);
@@ -183,7 +183,7 @@ public class AdminUserManagementServiceImpl implements AdminUserManagementServic
             throw new IllegalArgumentException("Cannot deactivate your own account");
         }
         
-        user.setActivated(isActive);
+        user.setVerified(isActive);
         UserEntity updatedUser = userRepository.save(user);
         
         log.info("Admin {} successfully updated status for user ID: {} to {}", 
@@ -209,7 +209,7 @@ public class AdminUserManagementServiceImpl implements AdminUserManagementServic
             throw new IllegalArgumentException("Cannot delete user with active programs or enrollments");
         }
         
-        user.setActivated(false);
+        user.setVerified(false);
         userRepository.save(user);
         
         log.info("Admin {} successfully soft deleted user ID: {}", principal.getName(), userId);
@@ -245,7 +245,7 @@ public class AdminUserManagementServiceImpl implements AdminUserManagementServic
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
         
-        user.setActivated(true);
+        user.setVerified(true);
         UserEntity restoredUser = userRepository.save(user);
         
         log.info("Admin {} successfully restored user ID: {}", principal.getName(), userId);
@@ -344,7 +344,7 @@ public class AdminUserManagementServiceImpl implements AdminUserManagementServic
             case ACTIVATE_ACCOUNTS:
                 users.forEach(user -> {
                     if (!user.getUsername().equals(principal.getName())) {
-                        user.setActivated(true);
+                        user.setVerified(true);
                     }
                 });
                 break;
@@ -352,7 +352,7 @@ public class AdminUserManagementServiceImpl implements AdminUserManagementServic
             case DEACTIVATE_ACCOUNTS:
                 users.forEach(user -> {
                     if (!user.getUsername().equals(principal.getName())) {
-                        user.setActivated(false);
+                        user.setVerified(false);
                     }
                 });
                 break;
@@ -360,7 +360,7 @@ public class AdminUserManagementServiceImpl implements AdminUserManagementServic
             case DELETE_ACCOUNTS:
                 users.forEach(user -> {
                     if (!user.getUsername().equals(principal.getName()) && canDeleteUser(user.getId())) {
-                        user.setActivated(false);
+                        user.setVerified(false);
                     }
                 });
                 break;
@@ -432,6 +432,12 @@ public class AdminUserManagementServiceImpl implements AdminUserManagementServic
     private AdminUserResponse convertToAdminUserResponse(UserEntity user) {
         AdminUserResponse response = modelMapper.map(user, AdminUserResponse.class);
         
+        // Explicitly set the isVerified field to ensure correct mapping
+        response.setVerified(user.isVerified());
+        
+        // Set the status field based on isVerified
+        response.setStatus(user.isVerified() ? "VERIFIED" : "NOT_VERIFIED");
+        
         // Get counts using separate queries to avoid lazy loading issues
         try {
             // Count fitness programs created by this user (if they're an instructor)
@@ -451,8 +457,8 @@ public class AdminUserManagementServiceImpl implements AdminUserManagementServic
         response.setActivityCount(0L);
         response.setStudentCount(0L);
         
-        // Set status based on activation
-        response.setStatus(user.isActivated() ? "ACTIVE" : "INACTIVE");
+        // Set status based on verification
+        response.setStatus(user.isVerified() ? "VERIFIED" : "NOT_VERIFIED");
         
         return response;
     }

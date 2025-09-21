@@ -3,8 +3,10 @@ package com.java.moveminds.entities;
 import jakarta.persistence.*;
 import lombok.Data;
 import com.java.moveminds.enums.Status;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.sql.Date;
+import java.time.LocalDateTime;
 
 @Data
 @Entity
@@ -23,6 +25,9 @@ public class UserProgramEntity {
     @Basic
     @Column(name = "end_date", nullable = false)
     private Date endDate;
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
     private UserEntity userByUserId;

@@ -19,6 +19,8 @@ import { Messages } from "./pages/Messages";
 import { MyPrograms } from "./pages/MyPrograms";
 import { InstructorDashboard } from "./pages/instructor/InstructorDashboard";
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
+import { AdminPrograms } from "./pages/admin/AdminPrograms";
+import AdminUsers from "./pages/admin/AdminUsers";
 import NotFound from "./pages/NotFound";
 
 // Protected Route Component
@@ -89,9 +91,9 @@ const App = () => (
               </ProtectedRoute>
             }
           >
-            <Route index element={<Navigate to="/admin/dashboard" replace />} />
-            <Route path="dashboard" element={<AdminDashboard />} />
-            <Route path="users" element={<div>User Management - Coming Soon</div>} />
+            <Route index element={<AdminDashboard />} />
+            <Route path="programs" element={<AdminPrograms />} />
+            <Route path="users" element={<AdminUsers />} />
             <Route path="analytics" element={<div>System Analytics - Coming Soon</div>} />
             <Route path="settings" element={<div>System Settings - Coming Soon</div>} />
           </Route>

@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -31,7 +32,26 @@ public interface UserProgramEntityRepository extends JpaRepository<UserProgramEn
     @Query("SELECT up FROM UserProgramEntity up WHERE up.fitnessProgramByProgramId.id = :programId")
     List<UserProgramEntity> findByProgramId(@Param("programId") Integer programId);
     
-    // Analytics methods - placeholder methods since UserProgramEntity doesn't have createdAt field
-    // These would need to be implemented with custom queries if date tracking is needed
+    // Analytics methods for revenue calculation
     long countByFitnessProgramByProgramId(FitnessProgramEntity program);
+    
+    // Revenue calculation methods
+    @Query("SELECT COUNT(up) FROM UserProgramEntity up WHERE up.createdAt >= :startDate AND up.createdAt < :endDate")
+    long countByCreatedAtBetween(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+    
+    @Query("SELECT COUNT(up) FROM UserProgramEntity up WHERE up.createdAt >= :startDate")
+    long countByCreatedAtAfter(@Param("startDate") LocalDateTime startDate);
+    
+    @Query("SELECT up FROM UserProgramEntity up WHERE up.createdAt >= :startDate AND up.createdAt < :endDate")
+    List<UserProgramEntity> findByCreatedAtBetween(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+    
+    @Query("SELECT up FROM UserProgramEntity up WHERE up.createdAt >= :startDate")
+    List<UserProgramEntity> findByCreatedAtAfter(@Param("startDate") LocalDateTime startDate);
+    
+    // Calculate total revenue from enrollments
+    @Query("SELECT SUM(fp.price) FROM UserProgramEntity up JOIN up.fitnessProgramByProgramId fp WHERE up.createdAt >= :startDate AND up.createdAt < :endDate")
+    BigDecimal calculateRevenueBetween(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+    
+    @Query("SELECT SUM(fp.price) FROM UserProgramEntity up JOIN up.fitnessProgramByProgramId fp WHERE up.createdAt >= :startDate")
+    BigDecimal calculateRevenueAfter(@Param("startDate") LocalDateTime startDate);
 }

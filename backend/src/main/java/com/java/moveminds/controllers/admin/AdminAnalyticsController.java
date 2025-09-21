@@ -2,6 +2,8 @@ package com.java.moveminds.controllers.admin;
 
 import com.java.moveminds.dto.response.admin.*;
 import com.java.moveminds.services.admin.AdminAnalyticsService;
+import com.java.moveminds.repositories.UserProgramEntityRepository;
+import com.java.moveminds.entities.UserProgramEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -9,8 +11,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.security.Principal;
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * REST Controller for admin analytics operations.
@@ -23,6 +29,7 @@ import java.time.LocalDate;
 public class AdminAnalyticsController {
     
     private final AdminAnalyticsService adminAnalyticsService;
+    private final UserProgramEntityRepository userProgramRepository;
     
     /**
      * Get comprehensive analytics overview
@@ -100,5 +107,94 @@ public class AdminAnalyticsController {
         
         AdminAnalyticsResponse analytics = adminAnalyticsService.getAnalyticsOverview(principal);
         return ResponseEntity.ok(analytics);
+    }
+    
+    /**
+     * Debug endpoint to help troubleshoot revenue calculation issues
+     */
+    @GetMapping("/debug/revenue")
+    public ResponseEntity<Map<String, Object>> debugRevenue(Principal principal) {
+        log.info("Admin {} requesting revenue debug information", principal.getName());
+        
+        Map<String, Object> debugInfo = new HashMap<>();
+        
+        try {
+            // Get all enrollments
+            List<UserProgramEntity> enrollments = userProgramRepository.findAll();
+            debugInfo.put("totalEnrollments", enrollments.size());
+            
+            // Calculate total revenue manually
+            BigDecimal totalRevenue = BigDecimal.ZERO;
+            int enrollmentsWithPrice = 0;
+            
+            for (UserProgramEntity enrollment : enrollments) {
+                BigDecimal programPrice = enrollment.getFitnessProgramByProgramId().getPrice();
+                if (programPrice != null) {
+                    totalRevenue = totalRevenue.add(programPrice);
+                    enrollmentsWithPrice++;
+                }
+            }
+            
+            debugInfo.put("totalRevenue", totalRevenue);
+            debugInfo.put("enrollmentsWithPrice", enrollmentsWithPrice);
+            
+            // Check monthly revenue
+            LocalDate startOfMonth = LocalDate.now().withDayOfMonth(1);
+            
+            BigDecimal monthlyRevenue = BigDecimal.ZERO;
+            int monthlyEnrollments = 0;
+            
+            for (UserProgramEntity enrollment : enrollments) {
+                // Check if enrollment started this month
+                LocalDate enrollmentDate = enrollment.getStartDate().toLocalDate();
+                if (enrollmentDate.isAfter(startOfMonth.minusDays(1))) {
+                    BigDecimal programPrice = enrollment.getFitnessProgramByProgramId().getPrice();
+                    if (programPrice != null) {
+                        monthlyRevenue = monthlyRevenue.add(programPrice);
+                        monthlyEnrollments++;
+                    }
+                }
+            }
+            
+            debugInfo.put("monthlyRevenue", monthlyRevenue);
+            debugInfo.put("monthlyEnrollments", monthlyEnrollments);
+            debugInfo.put("startOfMonth", startOfMonth.toString());
+            
+            // Check if created_at field exists and has data
+            boolean hasCreatedAtField = false;
+            int enrollmentsWithCreatedAt = 0;
+            
+            try {
+                for (UserProgramEntity enrollment : enrollments) {
+                    if (enrollment.getCreatedAt() != null) {
+                        hasCreatedAtField = true;
+                        enrollmentsWithCreatedAt++;
+                    }
+                }
+            } catch (Exception e) {
+                debugInfo.put("createdAtFieldError", e.getMessage());
+            }
+            
+            debugInfo.put("hasCreatedAtField", hasCreatedAtField);
+            debugInfo.put("enrollmentsWithCreatedAt", enrollmentsWithCreatedAt);
+            
+            // Sample enrollment data
+            if (!enrollments.isEmpty()) {
+                UserProgramEntity sample = enrollments.get(0);
+                Map<String, Object> sampleData = new HashMap<>();
+                sampleData.put("id", sample.getId());
+                sampleData.put("startDate", sample.getStartDate());
+                sampleData.put("createdAt", sample.getCreatedAt());
+                sampleData.put("programPrice", sample.getFitnessProgramByProgramId().getPrice());
+                sampleData.put("programName", sample.getFitnessProgramByProgramId().getName());
+                debugInfo.put("sampleEnrollment", sampleData);
+            }
+            
+        } catch (Exception e) {
+            debugInfo.put("error", e.getMessage());
+            log.error("Error in revenue debug endpoint", e);
+        }
+        
+        return ResponseEntity.ok(debugInfo);
     }
 }

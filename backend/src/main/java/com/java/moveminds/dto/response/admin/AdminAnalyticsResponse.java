@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
 
 @Data
 @Builder
@@ -17,6 +16,8 @@ public class AdminAnalyticsResponse {
     
     // Overview metrics
     private Long totalUsers;
+    private Long verifiedUsers;
+    private Long notVerifiedUsers;
     private Long totalInstructors;
     private Long totalPrograms;
     private Long activePrograms;

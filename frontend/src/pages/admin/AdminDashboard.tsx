@@ -40,10 +40,15 @@ import {
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useState, useEffect } from "react";
-import { adminApi, AdminStatsResponse, AdminUserResponse, AdminProgramResponse, AdminAnalyticsResponse, PageResponse } from "@/lib/api";
+import { adminApi, userApi, AdminStatsResponse, AdminUserResponse, AdminProgramResponse, AdminAnalyticsResponse, PageResponse, User } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 import { toast } from "@/hooks/use-toast";
+import { DeleteConfirmationDialog } from "@/components/ui/delete-confirmation-dialog";
 
 export const AdminDashboard = () => {
+  // Get current user from auth context
+  const { user: currentUser } = useAuth();
+  
   // State management
   const [stats, setStats] = useState<AdminStatsResponse | null>(null);
   const [users, setUsers] = useState<AdminUserResponse[]>([]);
@@ -51,10 +56,17 @@ export const AdminDashboard = () => {
   const [programs, setPrograms] = useState<AdminProgramResponse[]>([]);
   const [analytics, setAnalytics] = useState<AdminAnalyticsResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [allUsers, setAllUsers] = useState<AdminUserResponse[]>([]); // Store all users for frontend filtering
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRole, setSelectedRole] = useState<string>("");
+  const [selectedVerificationStatus, setSelectedVerificationStatus] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize] = useState(10);
+  
+  // Delete dialog states
+  const [deleteUserDialog, setDeleteUserDialog] = useState<{ open: boolean; user: AdminUserResponse | null }>({ open: false, user: null });
+  const [deleteProgramDialog, setDeleteProgramDialog] = useState<{ open: boolean; program: AdminProgramResponse | null }>({ open: false, program: null });
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // Programs state
   const [programSearchTerm, setProgramSearchTerm] = useState("");
@@ -77,6 +89,70 @@ export const AdminDashboard = () => {
     }
   };
 
+  // Apply frontend filtering when filters change
+  const applyFrontendFiltering = () => {
+    if (allUsers.length === 0) return;
+    
+    let filteredUsers = [...allUsers];
+    
+    // Apply role filter
+    if (selectedRole && selectedRole.trim() !== '') {
+      filteredUsers = filteredUsers.filter(user => user.role === selectedRole);
+    }
+    
+    // Apply search filter
+    if (searchTerm && searchTerm.trim() !== '') {
+      const searchLower = searchTerm.toLowerCase();
+      filteredUsers = filteredUsers.filter(user => 
+        user.username.toLowerCase().includes(searchLower) ||
+        user.email.toLowerCase().includes(searchLower) ||
+        (user.firstName && user.firstName.toLowerCase().includes(searchLower)) ||
+        (user.lastName && user.lastName.toLowerCase().includes(searchLower))
+      );
+    }
+    
+    // Apply verification status filter
+    if (selectedVerificationStatus === 'verified') {
+      console.log('Filtering for verified users. Before filter:', filteredUsers.length);
+      filteredUsers = filteredUsers.filter(user => {
+        console.log(`User ${user.username}: isVerified = ${user.isVerified} (type: ${typeof user.isVerified})`);
+        // Handle both boolean and string values
+        const isVerified = user.isVerified === true || String(user.isVerified) === 'true' || user.status === 'VERIFIED';
+        console.log(`User ${user.username}: computed isVerified = ${isVerified}`);
+        return isVerified;
+      });
+      console.log('After verified filter:', filteredUsers.length);
+    } else if (selectedVerificationStatus === 'not_verified') {
+      console.log('Filtering for not verified users. Before filter:', filteredUsers.length);
+      filteredUsers = filteredUsers.filter(user => {
+        console.log(`User ${user.username}: isVerified = ${user.isVerified} (type: ${typeof user.isVerified})`);
+        // Handle both boolean and string values
+        const isVerified = user.isVerified === true || String(user.isVerified) === 'true' || user.status === 'VERIFIED';
+        console.log(`User ${user.username}: computed isVerified = ${isVerified}`);
+        return !isVerified;
+      });
+      console.log('After not verified filter:', filteredUsers.length);
+    }
+    
+    // Apply pagination
+    const startIndex = currentPage * pageSize;
+    const endIndex = startIndex + pageSize;
+    filteredUsers = filteredUsers.slice(startIndex, endIndex);
+    
+    console.log('Frontend filtering applied:', {
+      totalUsers: allUsers.length,
+      filteredUsers: filteredUsers.length,
+      selectedRole,
+      searchTerm,
+      selectedVerificationStatus,
+      currentPage
+    });
+    console.log('All users for frontend filtering:', allUsers.map(u => ({ id: u.id, username: u.username, isVerified: u.isVerified, role: u.role })));
+    console.log('Final filtered users:', filteredUsers.map(u => ({ id: u.id, username: u.username, isVerified: u.isVerified, role: u.role })));
+    
+    setUsers(filteredUsers);
+  };
+
   // Fetch all users
   const fetchUsers = async () => {
     try {
@@ -85,18 +161,115 @@ export const AdminDashboard = () => {
         size: pageSize
       };
       
-      // Only add role and search if they have values
-      if (selectedRole && selectedRole.trim() !== '') {
-        params.role = selectedRole;
-      }
-      if (searchTerm && searchTerm.trim() !== '') {
-        params.search = searchTerm;
+      // If verification status filter is active, we need to fetch all users and filter on frontend
+      // Otherwise, we can use backend filtering for better performance
+      const needsFrontendFiltering = selectedVerificationStatus && selectedVerificationStatus.trim() !== '';
+      
+      if (needsFrontendFiltering) {
+        // When verification status filter is active, fetch all users without search/role filters
+        // and do all filtering on the frontend
+        params.page = 0;
+        params.size = 1000; // Fetch a large number to get all users
+        console.log('Fetching all users for frontend filtering with params:', params);
+      } else {
+        // Normal backend filtering when verification status is not active
+        if (selectedRole && selectedRole.trim() !== '') {
+          params.role = selectedRole;
+        }
+        if (searchTerm && searchTerm.trim() !== '') {
+          params.search = searchTerm;
+        }
+        console.log('Fetching users with backend filtering params:', params);
       }
       
-      console.log('Fetching users with params:', params);
       const response = await adminApi.getAllUsers(params);
       console.log('Users response:', response.data);
-      setUsers(response.data.content);
+      console.log('First user isVerified:', response.data.content[0]?.isVerified);
+      console.log('First user full object:', response.data.content[0]);
+      
+      // Filter out the current admin from the users list using username
+      let filteredUsers = response.data.content.filter(user => 
+        currentUser?.username ? user.username !== currentUser.username : true
+      );
+      
+      // Store all users for frontend filtering
+      if (needsFrontendFiltering) {
+        setAllUsers(filteredUsers);
+      }
+      
+      // Apply frontend filtering if needed
+      if (needsFrontendFiltering) {
+        // Apply role filter on frontend
+        if (selectedRole && selectedRole.trim() !== '') {
+          filteredUsers = filteredUsers.filter(user => user.role === selectedRole);
+        }
+        
+        // Apply search filter on frontend
+        if (searchTerm && searchTerm.trim() !== '') {
+          const searchLower = searchTerm.toLowerCase();
+          filteredUsers = filteredUsers.filter(user => 
+            user.username.toLowerCase().includes(searchLower) ||
+            user.email.toLowerCase().includes(searchLower) ||
+            (user.firstName && user.firstName.toLowerCase().includes(searchLower)) ||
+            (user.lastName && user.lastName.toLowerCase().includes(searchLower))
+          );
+        }
+        
+        // Apply verification status filter on frontend
+        if (selectedVerificationStatus === 'verified') {
+          console.log('Backend filtering - Filtering for verified users. Before filter:', filteredUsers.length);
+          filteredUsers = filteredUsers.filter(user => {
+            console.log(`Backend filtering - User ${user.username}: isVerified = ${user.isVerified} (type: ${typeof user.isVerified})`);
+            // Handle both boolean and string values
+            const isVerified = user.isVerified === true || String(user.isVerified) === 'true' || user.status === 'VERIFIED';
+            console.log(`Backend filtering - User ${user.username}: computed isVerified = ${isVerified}`);
+            return isVerified;
+          });
+          console.log('Backend filtering - After verified filter:', filteredUsers.length);
+        } else if (selectedVerificationStatus === 'not_verified') {
+          console.log('Backend filtering - Filtering for not verified users. Before filter:', filteredUsers.length);
+          filteredUsers = filteredUsers.filter(user => {
+            console.log(`Backend filtering - User ${user.username}: isVerified = ${user.isVerified} (type: ${typeof user.isVerified})`);
+            // Handle both boolean and string values
+            const isVerified = user.isVerified === true || String(user.isVerified) === 'true' || user.status === 'VERIFIED';
+            console.log(`Backend filtering - User ${user.username}: computed isVerified = ${isVerified}`);
+            return !isVerified;
+          });
+          console.log('Backend filtering - After not verified filter:', filteredUsers.length);
+        }
+        
+        // Apply pagination on frontend
+        const startIndex = currentPage * pageSize;
+        const endIndex = startIndex + pageSize;
+        filteredUsers = filteredUsers.slice(startIndex, endIndex);
+      } else {
+        // Apply verification status filter on frontend (when not using frontend filtering for everything)
+        if (selectedVerificationStatus && selectedVerificationStatus.trim() !== '') {
+          console.log('Mixed filtering - Applying verification status filter:', selectedVerificationStatus);
+          console.log('Mixed filtering - Before filter:', filteredUsers.length);
+          filteredUsers = filteredUsers.filter(user => {
+            console.log(`Mixed filtering - User ${user.username}: isVerified = ${user.isVerified} (type: ${typeof user.isVerified})`);
+            // Handle both boolean and string values
+            const isVerified = user.isVerified === true || String(user.isVerified) === 'true' || user.status === 'VERIFIED';
+            console.log(`Mixed filtering - User ${user.username}: computed isVerified = ${isVerified}`);
+            if (selectedVerificationStatus === 'verified') {
+              return isVerified;
+            } else if (selectedVerificationStatus === 'not_verified') {
+              return !isVerified;
+            }
+            return true;
+          });
+          console.log('Mixed filtering - After filter:', filteredUsers.length);
+        }
+      }
+      
+      console.log('Current user username:', currentUser?.username);
+      console.log('Selected verification status:', selectedVerificationStatus);
+      console.log('Selected role:', selectedRole);
+      console.log('Search term:', searchTerm);
+      console.log('All users before filtering:', response.data.content.map(u => ({ id: u.id, username: u.username, isVerified: u.isVerified, role: u.role })));
+      console.log('Filtered users (excluding current admin):', filteredUsers.map(u => ({ id: u.id, username: u.username, isVerified: u.isVerified, role: u.role })));
+      setUsers(filteredUsers);
     } catch (error) {
       console.error('Failed to fetch users:', error);
       toast({
@@ -159,6 +332,9 @@ export const AdminDashboard = () => {
       }
       
       console.log('Programs response:', response.data);
+      console.log('First program isActive:', response.data.content[0]?.isActive);
+      console.log('First program status:', response.data.content[0]?.status);
+      console.log('First program full object:', response.data.content[0]);
       setPrograms(response.data.content);
     } catch (error) {
       console.error('Failed to fetch programs:', error);
@@ -193,13 +369,13 @@ export const AdminDashboard = () => {
       setLoading(true);
       console.log('Loading admin dashboard data...');
       try {
-        await Promise.all([
-          fetchStats(),
-          fetchUsers(),
+      await Promise.all([
+        fetchStats(),
+        fetchUsers(),
           fetchInstructors(),
           fetchPrograms(),
           fetchAnalytics()
-        ]);
+      ]);
         console.log('All data loaded successfully');
       } catch (error) {
         console.error('Error loading admin dashboard data:', error);
@@ -209,12 +385,20 @@ export const AdminDashboard = () => {
     loadData();
   }, []);
 
-  // Refetch users when search or role filter changes
+  // Refetch users when search or filter changes
   useEffect(() => {
+    console.log('useEffect triggered with:', { searchTerm, selectedRole, selectedVerificationStatus, currentPage, loading, allUsersLength: allUsers.length });
     if (!loading) {
+      // If we have all users loaded and verification status filter is active, use frontend filtering
+      if (allUsers.length > 0 && selectedVerificationStatus && selectedVerificationStatus.trim() !== '') {
+        console.log('Using frontend filtering');
+        applyFrontendFiltering();
+      } else {
+        console.log('Using backend filtering');
       fetchUsers();
     }
-  }, [searchTerm, selectedRole, currentPage]);
+    }
+  }, [searchTerm, selectedRole, selectedVerificationStatus, currentPage]);
 
   // Refetch programs when search or filter changes
   useEffect(() => {
@@ -229,9 +413,28 @@ export const AdminDashboard = () => {
       await adminApi.updateUserStatus(userId, isActive);
       toast({
         title: "Success",
-        description: `User ${isActive ? 'activated' : 'deactivated'} successfully`
+        description: `User ${isActive ? 'verified' : 'unverified'} successfully`
       });
-      fetchUsers(); // Refresh the list
+      
+      // Update local state immediately for better UX
+      setUsers(prevUsers => 
+        prevUsers.map(user => 
+          user.id === userId 
+            ? { ...user, isVerified: isActive }
+            : user
+        )
+      );
+      
+      setInstructors(prevInstructors => 
+        prevInstructors.map(instructor => 
+          instructor.id === userId 
+            ? { ...instructor, isVerified: isActive }
+            : instructor
+        )
+      );
+      
+      // Also refresh analytics to show updated counts
+      fetchAnalytics();
     } catch (error) {
       console.error('Failed to update user status:', error);
       toast({
@@ -263,17 +466,27 @@ export const AdminDashboard = () => {
 
   // Handle user deletion
   const handleUserDelete = async (userId: number) => {
-    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-      return;
+    const user = users.find(u => u.id === userId);
+    if (user) {
+      setDeleteUserDialog({ open: true, user });
     }
+  };
     
+  // Confirm user deletion
+  const confirmUserDelete = async () => {
+    if (!deleteUserDialog.user) return;
+    
+    setIsDeleting(true);
     try {
-      await adminApi.deleteUser(userId);
+      await adminApi.deleteUser(deleteUserDialog.user.id);
       toast({
         title: "Success",
         description: "User deleted successfully"
       });
-      fetchUsers(); // Refresh the list
+      
+      // Refresh users list
+      fetchUsers();
+      setDeleteUserDialog({ open: false, user: null });
     } catch (error) {
       console.error('Failed to delete user:', error);
       toast({
@@ -281,22 +494,34 @@ export const AdminDashboard = () => {
         title: "Error",
         description: "Failed to delete user"
       });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
   // Handle program deletion
   const handleProgramDelete = async (programId: number) => {
-    if (!confirm('Are you sure you want to delete this program? This action cannot be undone.')) {
-      return;
+    const program = programs.find(p => p.id === programId);
+    if (program) {
+      setDeleteProgramDialog({ open: true, program });
     }
+  };
+
+  // Confirm program deletion
+  const confirmProgramDelete = async () => {
+    if (!deleteProgramDialog.program) return;
     
+    setIsDeleting(true);
     try {
-      await adminApi.deleteProgram(programId);
+      await adminApi.deleteProgram(deleteProgramDialog.program.id);
       toast({
         title: "Success",
         description: "Program deleted successfully"
       });
-      fetchPrograms(); // Refresh the list
+      
+      // Refresh programs list
+      fetchPrograms();
+      setDeleteProgramDialog({ open: false, program: null });
     } catch (error) {
       console.error('Failed to delete program:', error);
       toast({
@@ -304,6 +529,8 @@ export const AdminDashboard = () => {
         title: "Error",
         description: "Failed to delete program"
       });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -337,12 +564,36 @@ export const AdminDashboard = () => {
     }
   };
 
-  // System stats configuration
-  const systemStats = stats ? [
-    { title: "Total Users", value: stats.totalUsers.toString(), change: `+${stats.newUsersThisMonth}`, icon: Users, color: "text-primary" },
-    { title: "Active Programs", value: stats.totalPrograms.toString(), change: `+${stats.newProgramsThisMonth}`, icon: BookOpen, color: "text-blue-400" },
-    { title: "Monthly Revenue", value: `$${stats.monthlyRevenue.toLocaleString()}`, change: "+22%", icon: DollarSign, color: "text-green-400" },
-    { title: "System Health", value: "99.2%", change: "+0.1%", icon: Activity, color: "text-green-400" },
+  // System stats configuration - using analytics data
+  const systemStats = analytics ? [
+    { 
+      title: "Verified Users", 
+      value: analytics.verifiedUsers.toString(), 
+      change: `+${analytics.newUsersThisMonth} new this month`, 
+      icon: Users, 
+      color: "text-primary"
+    },
+    { 
+      title: "Active Programs", 
+      value: analytics.activePrograms.toString(), 
+      change: `+${analytics.newProgramsThisMonth} new this month`, 
+      icon: BookOpen, 
+      color: "text-blue-400"
+    },
+    { 
+      title: "Monthly Revenue", 
+      value: `$${analytics.revenueThisMonth.toLocaleString()}`, 
+      change: `+${analytics.totalEnrollments} enrollments`, 
+      icon: DollarSign, 
+      color: "text-green-400"
+    },
+    { 
+      title: "System Health", 
+      value: `${analytics.systemHealth.serverUptime}%`, 
+      change: `${analytics.systemHealth.activeUsers} active users`, 
+      icon: Activity, 
+      color: "text-green-400"
+    },
   ] : [];
 
   const systemAlerts = [
@@ -361,10 +612,41 @@ export const AdminDashboard = () => {
     }
   };
 
-  const getStatusBadge = (isActivated: boolean) => {
-    return isActivated ? 
-      <Badge variant="default">Active</Badge> : 
-      <Badge variant="secondary">Inactive</Badge>;
+  const getStatusBadge = (user: any) => {
+    // Use isVerified field if available, otherwise fall back to status field
+    const isVerified = user.isVerified !== undefined ? user.isVerified : (user.status === 'VERIFIED');
+    
+    return isVerified ? 
+      <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 border-green-200 dark:border-green-700">Verified</Badge> : 
+      <Badge variant="secondary" className="bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300 border-orange-200 dark:border-orange-700">Not Verified</Badge>;
+  };
+
+  const getProgramStatusBadge = (program: any) => {
+    // Debug logging
+    console.log('AdminDashboard getProgramStatusBadge called with program:', program);
+    console.log('program.isActive:', program.isActive);
+    console.log('program.status:', program.status);
+    
+    // Use isActive field if available, otherwise fall back to status field
+    const isActive = program.isActive !== undefined ? program.isActive : (program.status === 'ACTIVE');
+    
+    console.log('Final isActive value:', isActive);
+    
+    return (
+      <span className={`px-2 py-1 text-xs rounded-full font-medium ${
+        isActive 
+          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+          : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+      }`}>
+        {isActive ? 'Active' : 'Pending'}
+      </span>
+    );
+  };
+
+  // Helper function to get program activation status
+  const getProgramActivationStatus = (program: any) => {
+    // Use isActive field if available, otherwise fall back to status field
+    return program.isActive !== undefined ? program.isActive : (program.status === 'ACTIVE');
   };
 
   const getRoleIcon = (role: string) => {
@@ -471,9 +753,10 @@ export const AdminDashboard = () => {
 
         {/* Users Tab */}
         <TabsContent value="users" className="space-y-6">
+          <div className="space-y-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex items-center gap-4 flex-1">
-              <div className="relative flex-1 max-w-sm">
+              <div className="flex items-center gap-4 flex-wrap">
+                <div className="relative flex-1 max-w-sm min-w-[200px]">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input 
                   placeholder="Search users..." 
@@ -482,21 +765,91 @@ export const AdminDashboard = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <select 
-                className="px-3 py-2 border border-border rounded-md bg-background text-foreground"
-                value={selectedRole}
-                onChange={(e) => setSelectedRole(e.target.value)}
-              >
-                <option value="">All Roles</option>
-                <option value="USER">Users</option>
-                <option value="INSTRUCTOR">Instructors</option>
-                <option value="ADMIN">Admins</option>
-              </select>
+                <Select value={selectedRole || "all"} onValueChange={(value) => setSelectedRole(value === "all" ? "" : value)}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="All Roles" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Roles</SelectItem>
+                    <SelectItem value="USER">Users</SelectItem>
+                    <SelectItem value="INSTRUCTOR">Instructors</SelectItem>
+                    <SelectItem value="ADMIN">Admins</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                <Select value={selectedVerificationStatus || "all"} onValueChange={(value) => {
+                  console.log('Verification status filter changed to:', value);
+                  setSelectedVerificationStatus(value === "all" ? "" : value);
+                }}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="All Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="verified">Verified</SelectItem>
+                    <SelectItem value="not_verified">Not Verified</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                {/* Clear Filters Button */}
+                {(selectedRole || selectedVerificationStatus || searchTerm) && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      setSelectedRole("");
+                      setSelectedVerificationStatus("");
+                      setSearchTerm("");
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <XCircle className="h-4 w-4" />
+                    Clear Filters
+                  </Button>
+                )}
             </div>
             <Button variant="fitness" size="sm">
               <UserPlus className="h-4 w-4 mr-2" />
               Add User
             </Button>
+            </div>
+          </div>
+
+          {/* Active Filters Summary */}
+          {(selectedRole || selectedVerificationStatus || searchTerm) && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm text-muted-foreground">Active filters:</span>
+              {searchTerm && (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  <Search className="h-3 w-3" />
+                  Search: "{searchTerm}"
+                </Badge>
+              )}
+              {selectedRole && (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  <Users className="h-3 w-3" />
+                  Role: {selectedRole}
+                </Badge>
+              )}
+              {selectedVerificationStatus && (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  {selectedVerificationStatus === 'verified' ? (
+                    <CheckCircle className="h-3 w-3 text-green-500" />
+                  ) : (
+                    <XCircle className="h-3 w-3 text-orange-500" />
+                  )}
+                  Status: {selectedVerificationStatus === 'verified' ? 'Verified' : 'Not Verified'}
+                </Badge>
+              )}
+            </div>
+          )}
+
+          {/* Results Summary */}
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              Showing {users.length} user{users.length !== 1 ? 's' : ''}
+              {(selectedRole || selectedVerificationStatus || searchTerm) && ' (filtered)'}
+            </p>
           </div>
 
           <div className="grid gap-6">
@@ -506,7 +859,7 @@ export const AdminDashboard = () => {
                   <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                   <h3 className="text-lg font-semibold mb-2">No users found</h3>
                   <p className="text-muted-foreground">
-                    {searchTerm || selectedRole ? 'Try adjusting your search criteria.' : 'No users have been registered yet.'}
+                    {searchTerm || selectedRole || selectedVerificationStatus ? 'Try adjusting your search criteria.' : 'No users have been registered yet.'}
                   </p>
                 </CardContent>
               </Card>
@@ -532,7 +885,7 @@ export const AdminDashboard = () => {
                                 {getRoleDisplayName(user.role)}
                               </span>
                             </div>
-                            {getStatusBadge(user.isActivated)}
+                            {getStatusBadge(user)}
                           </div>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -553,22 +906,27 @@ export const AdminDashboard = () => {
                                 <Mail className="h-4 w-4 mr-2" />
                                 Send Message
                               </DropdownMenuItem>
-                              {user.isActivated ? (
+                              {(() => {
+                                // Use the same logic as getStatusBadge for consistency
+                                const isVerified = user.isVerified !== undefined ? user.isVerified : (user.status === 'VERIFIED');
+                                
+                                return isVerified ? (
                                 <DropdownMenuItem 
                                   className="text-destructive"
                                   onClick={() => handleUserStatusUpdate(user.id, false)}
                                 >
                                   <Ban className="h-4 w-4 mr-2" />
-                                  Deactivate User
+                                    Unverify User
                                 </DropdownMenuItem>
                               ) : (
                                 <DropdownMenuItem
                                   onClick={() => handleUserStatusUpdate(user.id, true)}
                                 >
                                   <UserCheck className="h-4 w-4 mr-2" />
-                                  Activate User
+                                    Verify User
                                 </DropdownMenuItem>
-                              )}
+                                );
+                              })()}
                               <DropdownMenuItem 
                                 className="text-destructive"
                                 onClick={() => handleUserDelete(user.id)}
@@ -659,7 +1017,7 @@ export const AdminDashboard = () => {
                               <GraduationCap className="h-4 w-4" />
                               <span className="text-sm text-muted-foreground">Certified Instructor</span>
                             </div>
-                            {getStatusBadge(instructor.isActivated)}
+                            {getStatusBadge(instructor)}
                           </div>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -684,22 +1042,26 @@ export const AdminDashboard = () => {
                                 <Edit className="h-4 w-4 mr-2" />
                                 Edit Profile
                               </DropdownMenuItem>
-                              {instructor.isActivated ? (
+                              {(() => {
+                                // Use the same logic as getStatusBadge for consistency
+                                const isVerified = instructor.isVerified !== undefined ? instructor.isVerified : (instructor.status === 'VERIFIED');
+                                return isVerified ? (
                                 <DropdownMenuItem 
                                   className="text-destructive"
                                   onClick={() => handleUserStatusUpdate(instructor.id, false)}
                                 >
                                   <Ban className="h-4 w-4 mr-2" />
-                                  Deactivate Instructor
+                                    Unverify Instructor
                                 </DropdownMenuItem>
                               ) : (
                                 <DropdownMenuItem
                                   onClick={() => handleUserStatusUpdate(instructor.id, true)}
                                 >
                                   <UserCheck className="h-4 w-4 mr-2" />
-                                  Activate Instructor
+                                    Verify Instructor
                                 </DropdownMenuItem>
-                              )}
+                                );
+                              })()}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
@@ -810,7 +1172,7 @@ export const AdminDashboard = () => {
                 >
                   <XCircle className="h-4 w-4" />
                   Clear Filters
-                </Button>
+              </Button>
               )}
             </div>
           </div>
@@ -860,15 +1222,15 @@ export const AdminDashboard = () => {
 
           <div className="grid gap-6">
             {programs.length === 0 ? (
-              <Card variant="neumorphic">
-                <CardContent className="p-8 text-center">
-                  <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <Card variant="neumorphic">
+              <CardContent className="p-8 text-center">
+                <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                   <h3 className="text-lg font-semibold mb-2">No programs found</h3>
-                  <p className="text-muted-foreground">
+                <p className="text-muted-foreground">
                     {programSearchTerm || selectedCategory || selectedDifficulty ? 'Try adjusting your search criteria.' : 'No programs have been created yet.'}
-                  </p>
-                </CardContent>
-              </Card>
+                </p>
+              </CardContent>
+            </Card>
             ) : (
               programs.map((program) => (
                 <Card key={program.id} variant="neumorphic" className="hover:shadow-glow transition-all duration-300">
@@ -885,13 +1247,7 @@ export const AdminDashboard = () => {
                               <h3 className="text-lg font-semibold">
                                 {program.name}
                               </h3>
-                              <span className={`px-2 py-1 text-xs rounded-full font-medium ${
-                                program.isActive 
-                                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
-                                  : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                              }`}>
-                                {program.isActive ? 'Active' : 'Pending'}
-                              </span>
+                              {getProgramStatusBadge(program)}
                             </div>
                             <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
                               {program.description}
@@ -926,7 +1282,7 @@ export const AdminDashboard = () => {
                                 <Edit className="h-4 w-4 mr-2" />
                                 Edit Program
                               </DropdownMenuItem>
-                              {program.isActive ? (
+                              {getProgramActivationStatus(program) ? (
                                 <DropdownMenuItem 
                                   className="text-destructive"
                                   onClick={() => handleProgramStatusUpdate(program.id, false)}
@@ -1086,20 +1442,20 @@ export const AdminDashboard = () => {
             <>
               {/* Overview Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-                <Card variant="neumorphic">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <DollarSign className="h-5 w-5 text-primary" />
+            <Card variant="neumorphic">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5 text-primary" />
                       Total Revenue
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
                     <div className="text-2xl font-bold text-green-400">
                       ${analytics.totalRevenue.toLocaleString()}
-                    </div>
+                  </div>
                     <div className="text-sm text-muted-foreground">
                       This month: ${analytics.revenueThisMonth.toLocaleString()}
-                    </div>
+                  </div>
                   </CardContent>
                 </Card>
 
@@ -1113,27 +1469,27 @@ export const AdminDashboard = () => {
                   <CardContent>
                     <div className="text-2xl font-bold text-blue-400">
                       {analytics.newUsersThisMonth}
-                    </div>
+                  </div>
                     <div className="text-sm text-muted-foreground">
                       New users this month
-                    </div>
-                  </CardContent>
-                </Card>
+                </div>
+              </CardContent>
+            </Card>
 
-                <Card variant="neumorphic">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
+            <Card variant="neumorphic">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
                       <BookOpen className="h-5 w-5 text-purple-400" />
                       Program Growth
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
                     <div className="text-2xl font-bold text-purple-400">
                       {analytics.newProgramsThisMonth}
-                    </div>
+                  </div>
                     <div className="text-sm text-muted-foreground">
                       New programs this month
-                    </div>
+                  </div>
                   </CardContent>
                 </Card>
 
@@ -1147,20 +1503,20 @@ export const AdminDashboard = () => {
                   <CardContent>
                     <div className="text-2xl font-bold text-orange-400">
                       {analytics.newEnrollmentsThisMonth}
-                    </div>
+                  </div>
                     <div className="text-sm text-muted-foreground">
                       New enrollments this month
-                    </div>
-                  </CardContent>
-                </Card>
+                </div>
+              </CardContent>
+            </Card>
 
-                <Card variant="neumorphic">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
+            <Card variant="neumorphic">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
                       <BookOpen className="h-5 w-5 text-green-400" />
                       Active Programs
-                    </CardTitle>
-                  </CardHeader>
+                </CardTitle>
+              </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-green-400">
                       {analytics.activePrograms}
@@ -1178,9 +1534,9 @@ export const AdminDashboard = () => {
                 <Card variant="neumorphic">
                   <CardHeader>
                     <CardTitle>User Growth (Last 7 Days)</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
                       {analytics.userGrowthChart.map((point, index) => (
                         <div key={index} className="flex items-center justify-between">
                           <span className="text-sm">{point.label}</span>
@@ -1190,7 +1546,7 @@ export const AdminDashboard = () => {
                                 className="bg-primary h-2 rounded-full" 
                                 style={{ width: `${Math.min((point.value / Math.max(...analytics.userGrowthChart.map(p => p.value))) * 100, 100)}%` }}
                               ></div>
-                            </div>
+                  </div>
                             <span className="text-sm font-medium w-12 text-right">{point.value}</span>
                           </div>
                         </div>
@@ -1236,10 +1592,10 @@ export const AdminDashboard = () => {
                     <div className="space-y-4">
                       {analytics.categoryDistribution.map((category, index) => (
                         <div key={index} className="space-y-2">
-                          <div className="flex justify-between items-center">
+                  <div className="flex justify-between items-center">
                             <span className="text-sm font-medium">{category.category}</span>
                             <span className="text-sm text-muted-foreground">{category.count} programs</span>
-                          </div>
+                  </div>
                           <div className="w-full bg-background rounded-full h-2">
                             <div 
                               className="bg-gradient-primary h-2 rounded-full" 
@@ -1264,10 +1620,10 @@ export const AdminDashboard = () => {
                     <div className="space-y-4">
                       {analytics.difficultyDistribution.map((difficulty, index) => (
                         <div key={index} className="space-y-2">
-                          <div className="flex justify-between items-center">
+                  <div className="flex justify-between items-center">
                             <span className="text-sm font-medium">{difficulty.difficulty}</span>
                             <span className="text-sm text-muted-foreground">{difficulty.count} programs</span>
-                          </div>
+                  </div>
                           <div className="w-full bg-background rounded-full h-2">
                             <div 
                               className="bg-gradient-to-r from-green-400 to-red-400 h-2 rounded-full" 
@@ -1279,10 +1635,10 @@ export const AdminDashboard = () => {
                           </div>
                         </div>
                       ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
               {/* Top Performers */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1369,6 +1725,31 @@ export const AdminDashboard = () => {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Delete Confirmation Dialogs */}
+      <DeleteConfirmationDialog
+        open={deleteUserDialog.open}
+        onOpenChange={(open) => setDeleteUserDialog({ open, user: null })}
+        onConfirm={confirmUserDelete}
+        title="Delete User"
+        description="This action will permanently remove the user from the system."
+        itemName={deleteUserDialog.user?.username || ''}
+        itemType="user"
+        isLoading={isDeleting}
+        variant="destructive"
+      />
+
+      <DeleteConfirmationDialog
+        open={deleteProgramDialog.open}
+        onOpenChange={(open) => setDeleteProgramDialog({ open, program: null })}
+        onConfirm={confirmProgramDelete}
+        title="Delete Program"
+        description="This action will permanently remove the program from the system."
+        itemName={deleteProgramDialog.program?.name || ''}
+        itemType="program"
+        isLoading={isDeleting}
+        variant="destructive"
+      />
     </div>
   );
 };

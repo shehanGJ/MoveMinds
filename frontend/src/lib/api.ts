@@ -172,7 +172,7 @@ export interface AdminUserResponse {
   firstName: string;
   lastName: string;
   role: string;
-  isActivated: boolean;
+  isVerified: boolean;
   avatarUrl?: string;
   biography?: string;
   cityName?: string;
@@ -181,6 +181,7 @@ export interface AdminUserResponse {
   programCount: number;
   enrollmentCount: number;
   activityCount: number;
+  status?: string;
 }
 
 export interface AdminProgramResponse {
@@ -278,6 +279,8 @@ export interface SystemHealthMetrics {
 
 export interface AdminAnalyticsResponse {
   totalUsers: number;
+  verifiedUsers: number;
+  notVerifiedUsers: number;
   totalInstructors: number;
   totalPrograms: number;
   activePrograms: number;

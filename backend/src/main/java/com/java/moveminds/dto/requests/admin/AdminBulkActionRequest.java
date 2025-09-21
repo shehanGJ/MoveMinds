@@ -23,7 +23,7 @@ public class AdminBulkActionRequest {
     private BulkAction action;
     
     private Roles newRole;
-    private Boolean isActivated;
+    private Boolean isVerified;
     
     public enum BulkAction {
         UPDATE_ROLE,

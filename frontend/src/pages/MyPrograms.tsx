@@ -117,12 +117,23 @@ export const MyPrograms = () => {
         title: "Success",
         description: "Successfully enrolled in program",
       });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to enroll in program",
-      });
+    } catch (error: any) {
+      if (error.response?.status === 409) {
+        // User is already enrolled
+        toast({
+          variant: "default",
+          title: "Already Enrolled",
+          description: "You are already enrolled in this program",
+        });
+        // Refresh data to update the UI
+        fetchData();
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to enroll in program",
+        });
+      }
     }
   };
 

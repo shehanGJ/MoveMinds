@@ -78,7 +78,8 @@ export default {
 				'neumorphism': 'var(--shadow-neumorphism)',
 				'card': 'var(--shadow-card)',
 				'elevated': 'var(--shadow-elevated)',
-				'subtle': 'var(--shadow-subtle)'
+				'subtle': 'var(--shadow-subtle)',
+				'glow': 'var(--shadow-glow)'
 			},
 			transitionTimingFunction: {
 				'smooth': 'cubic-bezier(0.4, 0, 0.2, 1)',

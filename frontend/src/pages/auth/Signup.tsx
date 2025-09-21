@@ -157,24 +157,30 @@ export const Signup = () => {
   if (isSuccess) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-hero p-4">
-        <Card variant="neumorphic" className="w-full max-w-md bg-white/95 backdrop-blur-sm">
-          <CardContent className="pt-6 text-center">
-            <CheckCircle className="w-16 h-16 text-success mx-auto mb-4" />
-            <h2 className="text-2xl font-bold mb-2">Account Created!</h2>
-            <p className="text-muted-foreground mb-6">
+        <Card variant="neumorphic" className="w-full max-w-md hover:shadow-glow transition-all duration-300">
+          <CardContent className="pt-8 pb-8 text-center">
+            <div className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-6">
+              <CheckCircle className="w-12 h-12 text-green-500" />
+            </div>
+            <h2 className="text-2xl font-bold text-foreground mb-3">Account Created!</h2>
+            <p className="text-muted-foreground mb-8 leading-relaxed">
               We've sent you an activation email. Please check your inbox and click the activation link to complete your registration.
             </p>
-            <Button variant="hero" onClick={() => {
-              const role = localStorage.getItem('user_role');
-              const cleanRole = role?.replace('ROLE_', '') || 'USER';
-              if (cleanRole === 'ADMIN') {
-                navigate("/admin/dashboard");
-              } else if (cleanRole === 'INSTRUCTOR') {
-                navigate("/instructor/dashboard");
-              } else {
-                navigate("/dashboard");
-              }
-            }} className="w-full">
+            <Button 
+              variant="hero" 
+              onClick={() => {
+                const role = localStorage.getItem('user_role');
+                const cleanRole = role?.replace('ROLE_', '') || 'USER';
+                if (cleanRole === 'ADMIN') {
+                  navigate("/admin");
+                } else if (cleanRole === 'INSTRUCTOR') {
+                  navigate("/instructor/dashboard");
+                } else {
+                  navigate("/dashboard");
+                }
+              }} 
+              className="w-full h-12 text-black font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+            >
               Go to Dashboard
             </Button>
           </CardContent>
@@ -188,7 +194,7 @@ export const Signup = () => {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
-            <div className="w-12 h-12 rounded-full bg-gradient-primary flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-gradient-primary flex items-center justify-center shadow-lg">
               <Dumbbell className="w-6 h-6 text-white" />
             </div>
             <span className="text-2xl font-bold text-white">MoveMinds</span>
@@ -197,23 +203,30 @@ export const Signup = () => {
           <p className="text-white/80">Start your fitness journey today</p>
         </div>
 
-        <Card variant="neumorphic" className="bg-white/95 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle>Create Account</CardTitle>
-            <CardDescription>
-              Fill in your details to get started
-            </CardDescription>
+        <Card variant="neumorphic" className="hover:shadow-glow transition-all duration-300">
+          <CardHeader className="pb-4">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-lg bg-gradient-primary flex items-center justify-center">
+                <Dumbbell className="w-5 h-5 text-black" />
+              </div>
+              <div>
+                <CardTitle className="text-xl text-foreground">Create Account</CardTitle>
+                <CardDescription className="text-muted-foreground">
+                  Fill in your details to get started
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
+                  <Label htmlFor="firstName" className="text-foreground font-medium">First Name</Label>
                   <Input
                     id="firstName"
                     placeholder="First Name"
                     {...register("firstName")}
-                    className={errors.firstName ? "border-destructive" : ""}
+                    className={`bg-background/50 border-border/50 text-foreground placeholder:text-muted-foreground focus:border-primary ${errors.firstName ? "border-destructive" : ""}`}
                   />
                   {errors.firstName && (
                     <p className="text-xs text-destructive">
@@ -223,12 +236,12 @@ export const Signup = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
+                  <Label htmlFor="lastName" className="text-foreground font-medium">Last Name</Label>
                   <Input
                     id="lastName"
                     placeholder="Last Name"
                     {...register("lastName")}
-                    className={errors.lastName ? "border-destructive" : ""}
+                    className={`bg-background/50 border-border/50 text-foreground placeholder:text-muted-foreground focus:border-primary ${errors.lastName ? "border-destructive" : ""}`}
                   />
                   {errors.lastName && (
                     <p className="text-xs text-destructive">
@@ -239,13 +252,15 @@ export const Signup = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="username" className="text-foreground font-medium">Username</Label>
                 <div className="relative">
                   <Input
                     id="username"
                     placeholder="Enter Username"
                     {...register("username")}
-                    className={`${errors.username ? "border-destructive" : ""} ${
+                    className={`bg-background/50 border-border/50 text-foreground placeholder:text-muted-foreground focus:border-primary ${
+                      errors.username ? "border-destructive" : ""
+                    } ${
                       usernameStatus === 'taken' ? "border-destructive" : 
                       usernameStatus === 'available' ? "border-green-500" : ""
                     }`}
@@ -284,13 +299,13 @@ export const Signup = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className="text-foreground font-medium">Email</Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="Enter your email"
                   {...register("email")}
-                  className={errors.email ? "border-destructive" : ""}
+                  className={`bg-background/50 border-border/50 text-foreground placeholder:text-muted-foreground focus:border-primary ${errors.email ? "border-destructive" : ""}`}
                 />
                 {errors.email && (
                   <p className="text-sm text-destructive">
@@ -300,14 +315,14 @@ export const Signup = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="cityId">City</Label>
+                <Label htmlFor="cityId" className="text-foreground font-medium">City</Label>
                 <Select onValueChange={(value) => setValue("cityId", value)}>
-                  <SelectTrigger className={errors.cityId ? "border-destructive" : ""}>
+                  <SelectTrigger className={`bg-background/50 border-border/50 text-foreground focus:border-primary ${errors.cityId ? "border-destructive" : ""}`}>
                     <SelectValue placeholder="Select your city" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white">
+                  <SelectContent className="bg-background border-border">
                     {cities.map((city) => (
-                      <SelectItem key={city.id} value={city.id.toString()}>
+                      <SelectItem key={city.id} value={city.id.toString()} className="text-foreground">
                         {city.name}
                       </SelectItem>
                     ))}
@@ -321,15 +336,15 @@ export const Signup = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="role">Account Type</Label>
+                <Label htmlFor="role" className="text-foreground font-medium">Account Type</Label>
                 <Select onValueChange={(value) => setValue("role", value as "USER" | "INSTRUCTOR" | "ADMIN")} defaultValue="USER">
-                  <SelectTrigger className={errors.role ? "border-destructive" : ""}>
+                  <SelectTrigger className={`bg-background/50 border-border/50 text-foreground focus:border-primary ${errors.role ? "border-destructive" : ""}`}>
                     <SelectValue placeholder="Select account type" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white">
-                    <SelectItem value="USER">Regular User</SelectItem>
-                    <SelectItem value="INSTRUCTOR">Fitness Instructor</SelectItem>
-                    <SelectItem value="ADMIN">Administrator</SelectItem>
+                  <SelectContent className="bg-background border-border">
+                    <SelectItem value="USER" className="text-foreground">Regular User</SelectItem>
+                    <SelectItem value="INSTRUCTOR" className="text-foreground">Fitness Instructor</SelectItem>
+                    <SelectItem value="ADMIN" className="text-foreground">Administrator</SelectItem>
                   </SelectContent>
                 </Select>
                 {errors.role && (
@@ -343,20 +358,20 @@ export const Signup = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password" className="text-foreground font-medium">Password</Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Create a strong password"
                     {...register("password")}
-                    className={errors.password ? "border-destructive pr-10" : "pr-10"}
+                    className={`bg-background/50 border-border/50 text-foreground placeholder:text-muted-foreground focus:border-primary pr-10 ${errors.password ? "border-destructive" : ""}`}
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="absolute right-0 top-0 h-full px-3"
+                    className="absolute right-0 top-0 h-full px-3 text-muted-foreground hover:text-foreground"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
@@ -374,13 +389,13 @@ export const Signup = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="avatarUrl">Avatar URL (Optional)</Label>
+                <Label htmlFor="avatarUrl" className="text-foreground font-medium">Avatar URL (Optional)</Label>
                 <Input
                   id="avatarUrl"
                   type="url"
                   placeholder="https://example.com/avatar.jpg"
                   {...register("avatarUrl")}
-                  className={errors.avatarUrl ? "border-destructive" : ""}
+                  className={`bg-background/50 border-border/50 text-foreground placeholder:text-muted-foreground focus:border-primary ${errors.avatarUrl ? "border-destructive" : ""}`}
                 />
                 {errors.avatarUrl && (
                   <p className="text-sm text-destructive">
@@ -393,19 +408,35 @@ export const Signup = () => {
                 type="submit"
                 variant="hero"
                 size="lg"
-                className="w-full"
+                className="w-full h-12 text-black font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
                 disabled={isLoading || usernameStatus === 'taken' || usernameStatus === 'checking'}
               >
-                {isLoading ? "Creating Account..." : "Create Account"}
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black mr-2" />
+                    Creating Account...
+                  </>
+                ) : (
+                  "Create Account"
+                )}
               </Button>
             </form>
 
-            <div className="mt-6 text-center">
-              <p className="text-sm text-muted-foreground">
+            <div className="mt-8 text-center">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-border/30" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">Or</span>
+                </div>
+              </div>
+              
+              <p className="text-sm text-muted-foreground mt-4">
                 Already have an account?{" "}
                 <Link
                   to="/login"
-                  className="font-medium text-primary hover:text-primary-dark transition-colors"
+                  className="font-semibold text-primary hover:text-primary/80 transition-colors"
                 >
                   Sign in
                 </Link>

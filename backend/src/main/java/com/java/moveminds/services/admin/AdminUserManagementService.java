@@ -20,7 +20,7 @@ public interface AdminUserManagementService {
      * Get paginated list of users with advanced filtering and search capabilities
      */
     Page<AdminUserResponse> getAllUsers(Principal principal, Pageable pageable, 
-                                       Roles role, String search, Boolean isActivated);
+                                       Roles role, String search, Boolean isVerified);
     
     /**
      * Get user details by ID with comprehensive information

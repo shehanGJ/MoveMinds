@@ -35,7 +35,7 @@ public class AdminSystemManagementServiceImpl implements AdminSystemManagementSe
         
         // Get basic statistics
         long totalUsers = userRepository.count();
-        long activeUsers = userRepository.countByIsActivatedTrue();
+        long activeUsers = userRepository.countByIsVerifiedTrue();
         long inactiveUsers = totalUsers - activeUsers;
         
         // Get role-based statistics
@@ -94,7 +94,7 @@ public class AdminSystemManagementServiceImpl implements AdminSystemManagementSe
         log.info("Admin {} requesting basic statistics", principal.getName());
         
         long totalUsers = userRepository.count();
-        long activeUsers = userRepository.countByIsActivatedTrue();
+        long activeUsers = userRepository.countByIsVerifiedTrue();
         long totalInstructors = userRepository.countByRole(Roles.INSTRUCTOR);
         long totalAdmins = userRepository.countByRole(Roles.ADMIN);
         
@@ -160,7 +160,7 @@ public class AdminSystemManagementServiceImpl implements AdminSystemManagementSe
         
         Map<String, Object> stats = new HashMap<>();
         stats.put("totalUsers", userRepository.count());
-        stats.put("activeUsers", userRepository.countByIsActivatedTrue());
+        stats.put("activeUsers", userRepository.countByIsVerifiedTrue());
         stats.put("totalInstructors", userRepository.countByRole(Roles.INSTRUCTOR));
         stats.put("totalAdmins", userRepository.countByRole(Roles.ADMIN));
         stats.put("lastBackup", LocalDateTime.now().minusDays(1));

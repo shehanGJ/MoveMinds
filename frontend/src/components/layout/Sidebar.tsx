@@ -11,7 +11,8 @@ import {
   X,
   Users,
   Shield,
-  GraduationCap
+  GraduationCap,
+  LayoutDashboard
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -34,10 +35,12 @@ const sidebarItems = [
 
 // Admin specific items
 const adminItems = [
-  { label: "Admin Dashboard", href: "/admin/dashboard", icon: Shield },
+  { label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard },
   { label: "User Management", href: "/admin/users", icon: Users },
+  { label: "Programs", href: "/admin/programs", icon: Dumbbell },
   { label: "System Analytics", href: "/admin/analytics", icon: BarChart3 },
-  { label: "System Settings", href: "/admin/settings", icon: Settings },
+  { label: "Messages", href: "/dashboard/messages", icon: MessageCircle },
+  { label: "Profile", href: "/dashboard/profile", icon: User },
 ];
 
 // Instructor specific items
@@ -56,7 +59,7 @@ export const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
   const getItemsToShow = () => {
     const cleanRole = userRole.replace('ROLE_', '');
     if (cleanRole === 'ADMIN') {
-      return [...adminItems, ...sidebarItems];
+      return adminItems; // Only show admin-specific items
     } else if (cleanRole === 'INSTRUCTOR') {
       return instructorItems; // Only show instructor-specific items
     }

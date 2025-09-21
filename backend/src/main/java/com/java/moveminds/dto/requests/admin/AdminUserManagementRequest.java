@@ -43,5 +43,5 @@ public class AdminUserManagementRequest {
     @NotNull(message = "City ID is required")
     private Integer cityId;
     
-    private Boolean isActivated;
+    private Boolean isVerified;
 }

@@ -68,6 +68,17 @@ export const ProgramDetail = () => {
       };
       setProgram(mapped);
 
+      // Check if user is already enrolled in this program
+      try {
+        const userProgramsResponse = await userProgramsApi.getUserPrograms({ page: 0, size: 100 });
+        const userPrograms = userProgramsResponse.data.content || [];
+        const isAlreadyEnrolled = userPrograms.some((up: any) => up.id === parseInt(id!));
+        setIsEnrolled(isAlreadyEnrolled);
+      } catch (_err) {
+        // If we can't check enrollment status, assume not enrolled
+        setIsEnrolled(false);
+      }
+
       // Try to fetch comments; ignore failures (e.g., 500)
       try {
         const commentsResponse = await commentsApi.getForProgram(parseInt(id!), 0, 10);
@@ -75,8 +86,6 @@ export const ProgramDetail = () => {
       } catch (_err) {
         setComments([]);
       }
-
-      // Optionally: enrollment status could be fetched here
     } catch (error) {
       toast({
         variant: "destructive",
@@ -99,12 +108,22 @@ export const ProgramDetail = () => {
         title: "Success",
         description: "Successfully enrolled in program",
       });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to enroll in program",
-      });
+    } catch (error: any) {
+      if (error.response?.status === 409) {
+        // User is already enrolled
+        setIsEnrolled(true);
+        toast({
+          variant: "default",
+          title: "Already Enrolled",
+          description: "You are already enrolled in this program",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to enroll in program",
+        });
+      }
     } finally {
       setIsEnrolling(false);
     }
