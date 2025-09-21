@@ -1,15 +1,15 @@
 # 🏋️ MoveMinds - Fitness Learning Platform
 
-[![Java](https://img.shields.io/badge/Java-17-orange?style=flat-square&logo=java&logoColor=white)](https://www.oracle.com/java/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.2-brightgreen?style=flat-square&logo=spring&logoColor=white)](https://spring.io/projects/spring-boot)
-[![React](https://img.shields.io/badge/React-18-blue?style=flat-square&logo=react&logoColor=white)](https://reactjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![MySQL](https://img.shields.io/badge/MySQL-8.0-blue?style=flat-square&logo=mysql&logoColor=white)](https://www.mysql.com/)
-[![Vite](https://img.shields.io/badge/Vite-5.0-purple?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3.0-cyan?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
-[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
+[![Java](https://img.shields.io/badge/Java-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](https://www.oracle.com/java/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
+[![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge&logo=opensourceinitiative&logoColor=white)](LICENSE)
 
-[![YouTube Demo](https://img.shields.io/badge/YouTube-Watch%20Demo-red?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/Y8fMXlE5U-A)
+[![YouTube Demo](https://img.shields.io/badge/YouTube-Watch%20Demo-FF0000?style=for-the-badge&logo=youtube&logoColor=white&labelColor=FF0000&color=808080)](https://youtu.be/Y8fMXlE5U-A)
 
 **MoveMinds** is a comprehensive full-stack fitness learning platform that goes beyond traditional fitness tracking. It's a complete ecosystem where users can learn through tutorials, enroll in instructor-created programs, and engage with a secure, role-based community.
 
@@ -57,8 +57,10 @@ MoveMinds is not just a fitness tracker - it's a comprehensive learning platform
 ![Admin Dashboard](screenshots/admin1.png)
 *Admin main dashboard showing comprehensive system statistics including total users, instructors, programs, and enrollments. Features quick access cards for user management, program approval, system analytics, and revenue tracking with clean card-based layout.*
 
+#### Admin User Management
 ![Admin User Management](screenshots/admin2.png)
 
+#### Admin Program Approval
 ![Admin Program Approval](screenshots/admin3.png)
 
 #### Admin User Management
@@ -104,6 +106,10 @@ MoveMinds is not just a fitness tracker - it's a comprehensive learning platform
 #### Log Activity Window
 ![Log Activity](screenshots/user5.png)
 *Activity logging interface allowing users to record new workouts, track exercises, set personal goals, and log fitness activities. Features form inputs for activity type, duration, intensity, and notes.*
+
+#### Program Learning Overview & Discussion
+![Program Learning Overview](screenshots/user5.5.png)
+*Program learning overview page displaying course notes, discussion threads, instructor announcements, and community interactions. Features note-taking capabilities, Q&A sections, peer discussions, and collaborative learning tools to enhance the educational experience.*
 
 #### Program Content Learning
 ![Program Content Learning](screenshots/user6.png)
