@@ -184,7 +184,7 @@ MoveMinds is not just a fitness tracker - it's a comprehensive learning platform
 
 ## 🎥 Demo Video
 
-**YouTube Demo Video**: [Add your YouTube link here following the naming convention: "MoveMinds - Full Stack Fitness Learning Platform Demo"]
+**YouTube Demo Video**: [MoveMinds - Full Stack Fitness Learning Platform Demo](https://youtu.be/Y8fMXlE5U-A)
 
 *The demo video showcases all key features including program creation workflow, admin approval process, payment integration, and user experience across different roles.*
 
@@ -316,8 +316,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Contact
 
-- **Project Link**: [https://github.com/yourusername/moveminds](https://github.com/yourusername/moveminds)
-- **Demo Video**: [Add your YouTube link here]
+- **Project Link**: [https://github.com/shehanGJ/MoveMinds](https://github.com/shehanGJ/MoveMinds)
+- **Demo Video**: [MoveMinds - Full Stack Fitness Learning Platform Demo](https://youtu.be/Y8fMXlE5U-A)
 
 ---
 
