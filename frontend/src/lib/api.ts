@@ -553,4 +553,46 @@ export const instructorApi = {
     api.get<PageResponse<ProgramEnrollmentResponse>>('/instructor/students', { params }),
 };
 
+// Payment API
+export const paymentApi = {
+  createPayHerePayment: (data: {
+    programId: number;
+    customerName: string;
+    customerEmail: string;
+    customerPhone: string;
+    customerAddress: string;
+    customerCity: string;
+    customerCountry: string;
+    amount: number;
+    currency: string;
+    orderId: string;
+    itemName: string;
+    itemDescription: string;
+  }) => api.post<{
+    status: string;
+    message: string;
+    paymentUrl: string;
+    orderId: string;
+    merchantId: string;
+    merchantSecret: string;
+    amount: string;
+    currency: string;
+    customerName: string;
+    customerEmail: string;
+    customerPhone: string;
+    customerAddress: string;
+    customerCity: string;
+    customerCountry: string;
+    itemName: string;
+    itemDescription: string;
+    returnUrl: string;
+    cancelUrl: string;
+    notifyUrl: string;
+    hash: string;
+  }>('/api/payment/payhere/create', data),
+  
+  completePayment: (orderId: string, programId: string) => 
+    api.post<string>(`/api/payment/payhere/complete?orderId=${orderId}&programId=${programId}`),
+};
+
 export default api;

@@ -369,7 +369,7 @@ export const ProgramDetail = () => {
               {isEnrolled ? (
                 <div className="space-y-3">
                   <Button variant="hero" className="w-full" asChild>
-                    <Link to="/my-programs">
+                    <Link to={`/dashboard/program/${program.id}/learn`}>
                       <Play className="w-4 h-4 mr-2" />
                       Continue Program
                     </Link>

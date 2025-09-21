@@ -273,69 +273,30 @@ export const Dashboard = () => {
             <Link to="/activities">View All</Link>
           </Button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {activities.length > 0 ? (
-            activities.slice(0, 3).map((activity) => {
-              const getActivityIcon = (type: string) => {
-                switch (type.toLowerCase()) {
-                  case 'running': return '🏃';
-                  case 'cycling': return '🚴';
-                  case 'swimming': return '🏊';
-                  case 'weightlifting': return '🏋️';
-                  case 'yoga': return '🧘';
-                  case 'cardio': return '❤️';
-                  default: return '💪';
-                }
-              };
-
-              const getIntensityColor = (intensity: string) => {
-                switch (intensity.toLowerCase()) {
-                  case 'low': return 'text-green-500 bg-green-500/10';
-                  case 'medium': return 'text-yellow-500 bg-yellow-500/10';
-                  case 'high': return 'text-red-500 bg-red-500/10';
-                  default: return 'text-blue-500 bg-blue-500/10';
-                }
-              };
-
-              return (
-                <Card key={activity.id} variant="neumorphic" className="group cursor-pointer hover:shadow-glow transition-all duration-300">
-                  <CardContent className="p-3">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <div className="text-2xl">{getActivityIcon(activity.activityType)}</div>
-                        <div>
-                          <h3 className="font-semibold text-sm leading-tight">
-                            {activity.activityType}
-                          </h3>
-                          <p className="text-xs text-muted-foreground">
-                            {new Date(activity.logDate).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                      <Badge className={`text-xs px-2 py-1 ${getIntensityColor(activity.intensity)}`}>
-                        {activity.intensity}
-                      </Badge>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          <span>{activity.duration}m</span>
-                        </div>
-                        {activity.result && (
-                          <div className="flex items-center gap-1">
-                            <Target className="w-3 h-3" />
-                            <span>{activity.result}</span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="w-2 h-2 bg-primary rounded-full opacity-60"></div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })
+            activities.slice(0, 3).map((activity) => (
+              <Card key={activity.id} variant="neumorphic" className="group cursor-pointer hover:shadow-glow transition-all duration-300">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge variant="secondary" className="text-xs">
+                      {activity.activityType}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(activity.logDate).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <h3 className="font-semibold mb-2">
+                    {activity.activityType} Session
+                  </h3>
+                  <div className="space-y-1 text-sm text-muted-foreground">
+                    <p>Duration: {activity.duration} minutes</p>
+                    <p>Intensity: {activity.intensity}</p>
+                    {activity.result && <p>Result: {activity.result}</p>}
+                  </div>
+                </CardContent>
+              </Card>
+            ))
           ) : (
             <Card variant="neumorphic" className="col-span-full">
               <CardContent className="p-8 text-center">

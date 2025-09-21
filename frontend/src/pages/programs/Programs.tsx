@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, Filter, SortDesc, Clock, Star, DollarSign, Eye } from "lucide-react";
+import { Search, Filter, SortDesc, Clock, Star, DollarSign, Eye, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card-enhanced";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import PaymentModal from "@/components/ui/payment-modal";
 import { toast } from "@/hooks/use-toast";
 import { programsApi, type Program } from "@/lib/api";
 
@@ -16,29 +17,29 @@ export const Programs = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("all");
   const [selectedSort, setSelectedSort] = useState<string>("name");
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
 
   useEffect(() => {
     const fetchPrograms = async () => {
       try {
-        const response = await programsApi.getAll({ page: 0, size: 50 });
-        const page = response.data;
-        const items = (page.content || []).map((p: any) => ({
-          id: p.id,
-          name: p.name,
-          description: p.description || '',
-          difficulty: (p.difficultyLevel || 'BEGINNER').toString().toLowerCase() === 'beginner' ? 'Beginner' : (p.difficultyLevel || '').toString().toLowerCase() === 'intermediate' ? 'Intermediate' : 'Advanced',
-          duration: p.duration || 0,
-          price: Number(p.price ?? 0),
-          imageUrl: Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : undefined,
-        }) as Program[]);
-        setPrograms(items);
-        setFilteredPrograms(items);
+        const response = await programsApi.getAll();
+        console.log('Programs API response:', response.data);
+        // Handle paginated response - extract content array
+        const programsData = response.data?.content || [];
+        console.log('Programs data:', programsData);
+        setPrograms(programsData);
+        setFilteredPrograms(programsData);
       } catch (error) {
+        console.error('Error fetching programs:', error);
         toast({
           variant: "destructive",
           title: "Error",
           description: "Failed to load programs",
         });
+        // Set empty arrays on error
+        setPrograms([]);
+        setFilteredPrograms([]);
       } finally {
         setIsLoading(false);
       }
@@ -48,10 +49,16 @@ export const Programs = () => {
   }, []);
 
   useEffect(() => {
+    // Ensure programs is an array before filtering
+    if (!Array.isArray(programs)) {
+      setFilteredPrograms([]);
+      return;
+    }
+
     let filtered = programs.filter((program) => {
       const matchesSearch = program.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            program.description.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesDifficulty = selectedDifficulty === "all" || program.difficulty === selectedDifficulty;
+      const matchesDifficulty = selectedDifficulty === "all" || (program.difficulty || "").toLowerCase() === selectedDifficulty.toLowerCase();
       
       return matchesSearch && matchesDifficulty;
     });
@@ -65,8 +72,10 @@ export const Programs = () => {
           return a.price - b.price;
         case "difficulty":
           const difficultyOrder = { "Beginner": 1, "Intermediate": 2, "Advanced": 3 };
-          return (difficultyOrder[a.difficulty as keyof typeof difficultyOrder] || 0) - 
-                 (difficultyOrder[b.difficulty as keyof typeof difficultyOrder] || 0);
+          const aDifficulty = a.difficulty || "Unknown";
+          const bDifficulty = b.difficulty || "Unknown";
+          return (difficultyOrder[aDifficulty as keyof typeof difficultyOrder] || 0) - 
+                 (difficultyOrder[bDifficulty as keyof typeof difficultyOrder] || 0);
         default:
           return 0;
       }
@@ -75,7 +84,11 @@ export const Programs = () => {
     setFilteredPrograms(filtered);
   }, [programs, searchTerm, selectedDifficulty, selectedSort]);
 
-  const getDifficultyColor = (difficulty: string) => {
+  const getDifficultyColor = (difficulty: string | undefined | null) => {
+    if (!difficulty) {
+      return "bg-muted/10 text-muted-foreground border-muted/20";
+    }
+    
     switch (difficulty.toLowerCase()) {
       case "beginner":
         return "bg-success/10 text-success border-success/20";
@@ -86,6 +99,11 @@ export const Programs = () => {
       default:
         return "bg-muted/10 text-muted-foreground border-muted/20";
     }
+  };
+
+  const handleEnrollClick = (program: Program) => {
+    setSelectedProgram(program);
+    setIsPaymentModalOpen(true);
   };
 
   if (isLoading) {
@@ -175,7 +193,7 @@ export const Programs = () => {
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between mb-2">
                   <Badge className={getDifficultyColor(program.difficulty)}>
-                    {program.difficulty}
+                    {program.difficulty || "Unknown"}
                   </Badge>
                   <div className="flex items-center gap-1 text-sm text-muted-foreground">
                     <DollarSign className="w-4 h-4" />
@@ -199,12 +217,22 @@ export const Programs = () => {
                   </div>
                 </div>
                 
-                <Button variant="hero" className="w-full" asChild>
-                  <Link to={`/programs/${program.id}`}>
-                    <Eye className="w-4 h-4 mr-2" />
-                    View Details
-                  </Link>
-                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" className="flex-1" asChild>
+                    <Link to={`/programs/${program.id}`}>
+                      <Eye className="w-4 h-4 mr-2" />
+                      View Details
+                    </Link>
+                  </Button>
+                  <Button 
+                    variant="hero" 
+                    className="flex-1" 
+                    onClick={() => handleEnrollClick(program)}
+                  >
+                    <CreditCard className="w-4 h-4 mr-2" />
+                    Enroll Now
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}
@@ -231,6 +259,18 @@ export const Programs = () => {
             </Button>
           </CardContent>
         </Card>
+      )}
+      
+      {/* Payment Modal */}
+      {selectedProgram && (
+        <PaymentModal
+          isOpen={isPaymentModalOpen}
+          onClose={() => {
+            setIsPaymentModalOpen(false);
+            setSelectedProgram(null);
+          }}
+          program={selectedProgram}
+        />
       )}
     </div>
   );

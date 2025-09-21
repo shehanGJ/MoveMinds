@@ -452,9 +452,9 @@ export const MyPrograms = () => {
                     
                     <div className="flex gap-2">
                       <Button variant="hero" size="sm" className="flex-1" asChild>
-                        <Link to={`/programs/${program.id}`}>
-                          <Eye className="w-4 h-4 mr-2" />
-                          View Details
+                        <Link to={`/dashboard/program/${program.id}/learn`}>
+                          <Play className="w-4 h-4 mr-2" />
+                          Continue Program
                         </Link>
                       </Button>
                       <Button

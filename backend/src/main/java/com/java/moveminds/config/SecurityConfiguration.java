@@ -66,6 +66,9 @@ public class SecurityConfiguration {
                         // User program endpoints - Authenticated users only
                         .requestMatchers("/user-programs/**").authenticated() // User program management
                         
+                        // Payment endpoints - Authenticated users only
+                        .requestMatchers("/api/payment/**").authenticated() // Payment processing
+                        
                         // Admin endpoints - Admin only
                         .requestMatchers("/admin/**").hasRole("ADMIN") // Admin management
                         

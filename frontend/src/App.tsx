@@ -12,6 +12,7 @@ import { Login } from "./pages/auth/Login";
 import { Signup } from "./pages/auth/Signup";
 import { Dashboard } from "./pages/Dashboard";
 import { Programs } from "./pages/programs/Programs";
+import { ProgramLearning } from "./pages/programs/ProgramLearning";
 import { ProgramDetail } from "./pages/programs/ProgramDetail";
 import { Profile } from "./pages/Profile";
 import { Activities } from "./pages/Activities";
@@ -21,6 +22,8 @@ import { InstructorDashboard } from "./pages/instructor/InstructorDashboard";
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
 import { AdminPrograms } from "./pages/admin/AdminPrograms";
 import AdminUsers from "./pages/admin/AdminUsers";
+import PaymentSuccess from "./pages/payment/PaymentSuccess";
+import PaymentCancel from "./pages/payment/PaymentCancel";
 import NotFound from "./pages/NotFound";
 
 // Protected Route Component
@@ -48,6 +51,10 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           
+          {/* Payment routes */}
+          <Route path="/payment/success" element={<PaymentSuccess />} />
+          <Route path="/payment/cancel" element={<PaymentCancel />} />
+          
           {/* Protected routes - Regular Users */}
           <Route 
             path="/dashboard" 
@@ -59,6 +66,7 @@ const App = () => (
           >
             <Route index element={<Dashboard />} />
             <Route path="my-programs" element={<MyPrograms />} />
+            <Route path="program/:programId/learn" element={<ProgramLearning />} />
             <Route path="activities" element={<Activities />} />
             <Route path="messages" element={<Messages />} />
             <Route path="profile" element={<Profile />} />
