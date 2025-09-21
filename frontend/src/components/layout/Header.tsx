@@ -35,8 +35,9 @@ export const Header = ({ onMenuToggle }: HeaderProps) => {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-gradient-card/95 backdrop-blur supports-[backdrop-filter]:bg-gradient-card/60 shadow-card">
-      <div className="container flex h-16 items-center justify-between px-4">
-        <div className="flex items-center gap-4">
+      <div className="container flex h-16 items-center px-4">
+        {/* Left Section - Logo */}
+        <div className="flex items-center gap-2 flex-shrink-0">
           {onMenuToggle && (
             <Button
               variant="ghost"
@@ -50,7 +51,7 @@ export const Header = ({ onMenuToggle }: HeaderProps) => {
           
           <Link 
             to="/" 
-            className="flex items-center space-x-3 font-bold text-2xl bg-gradient-primary bg-clip-text text-transparent"
+            className="flex items-center space-x-2 font-bold text-2xl bg-gradient-primary bg-clip-text text-transparent"
           >
             <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center shadow-subtle">
               <span className="text-white font-bold text-lg">M</span>
@@ -59,7 +60,8 @@ export const Header = ({ onMenuToggle }: HeaderProps) => {
           </Link>
         </div>
 
-        <nav className="hidden md:flex items-center gap-8">
+        {/* Middle Section - Navigation */}
+        <nav className="hidden md:flex items-center gap-8 flex-1 justify-center">
           <Link 
             to="/programs" 
             className="text-sm font-semibold text-muted-foreground hover:text-primary transition-all duration-200 hover:shadow-subtle px-3 py-2 rounded-lg hover:bg-primary/10"
@@ -92,7 +94,8 @@ export const Header = ({ onMenuToggle }: HeaderProps) => {
           )}
         </nav>
 
-        <div className="flex items-center gap-2">
+        {/* Right Section - Profile/Notification Icons */}
+        <div className="flex items-center gap-2 flex-shrink-0">
           {isAuthenticated ? (
             <>
               <Button variant="ghost" size="icon" className="relative hover:bg-primary/10">

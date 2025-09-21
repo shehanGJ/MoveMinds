@@ -84,7 +84,7 @@ const Index = () => {
           </div>
           <h1 className="text-4xl lg:text-6xl font-bold text-white mb-6 animate-fade-in">
             Transform Your 
-            <span className="block bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">
+            <span className="block bg-gradient-primary bg-clip-text text-transparent">
               Fitness Journey
             </span>
           </h1>
@@ -92,7 +92,7 @@ const Index = () => {
             Join thousands of fitness enthusiasts using MoveMinds to reach their goals with personalized programs, progress tracking, and community support.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center animate-scale-in">
-            <Button variant="hero" size="xl" asChild className="bg-white text-primary hover:bg-white/90">
+            <Button variant="hero" size="xl" asChild className="bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 transition-all duration-200">
               <Link to="/signup">
                 Get Started Free
                 <ArrowRight className="ml-2 w-5 h-5" />
@@ -101,7 +101,7 @@ const Index = () => {
             <Button
               variant="outline"
               size="xl"
-              className="border-white text-white bg-transparent hover:bg-transparent hover:shadow-elevated transform hover:scale-[1.05] active:scale-[0.95]"
+              className="border-[#111318] text-white bg-[#111318] hover:bg-[#1a1f26] hover:text-white hover:border-transparent hover:shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),inset_0_-2px_4px_rgba(255,255,255,0.1)] transition-all duration-200"
               asChild
             >
               <Link to="/programs">
@@ -137,7 +137,7 @@ const Index = () => {
                 >
                   <CardContent className="pt-6">
                     <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-4 group-hover:shadow-elevated transition-all duration-200">
-                      <Icon className="w-8 h-8 text-white" />
+                      <Icon className="w-8 h-8 text-black" />
                     </div>
                     <h3 className="text-lg font-semibold mb-3">{feature.title}</h3>
                     <p className="text-muted-foreground text-sm leading-relaxed">
@@ -182,7 +182,7 @@ const Index = () => {
                   </p>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-gradient-primary rounded-full flex items-center justify-center">
-                      <span className="text-white font-semibold text-sm">
+                      <span className="text-black font-semibold text-sm">
                         {testimonial.name.split(' ').map(n => n[0]).join('')}
                       </span>
                     </div>
@@ -201,14 +201,14 @@ const Index = () => {
       {/* CTA Section */}
       <section className="py-20 bg-gradient-primary w-full">
         <div className="w-full px-4 text-center">
-          <h2 className="text-3xl lg:text-4xl font-bold text-white mb-6">
+          <h2 className="text-3xl lg:text-4xl font-bold text-black mb-6">
             Ready to Start Your Fitness Journey?
           </h2>
-          <p className="text-lg text-white/90 mb-8 max-w-2xl mx-auto">
+          <p className="text-lg text-black/90 mb-8 max-w-2xl mx-auto">
             Join MoveMinds today and get access to personalized programs, progress tracking, and a supportive community.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="fitness" size="xl" asChild className="bg-white text-primary hover:bg-white/90">
+            <Button variant="fitness" size="xl" asChild className="bg-black text-white hover:bg-black/90 hover:scale-105 transition-all duration-200">
               <Link to="/signup">
                 Start Free Trial
                 <ArrowRight className="ml-2 w-5 h-5" />
@@ -217,7 +217,7 @@ const Index = () => {
             <Button
               variant="outline"
               size="xl"
-              className="border-white text-white bg-transparent hover:bg-transparent hover:shadow-elevated transform hover:scale-[1.05] active:scale-[0.95]"
+              className="border-black text-white bg-black hover:bg-[#1a1a1a] hover:text-white hover:border-transparent hover:shadow-[0_4px_8px_rgba(0,0,0,0.3)] transition-all duration-200"
               asChild
             >
               <Link to="/login">

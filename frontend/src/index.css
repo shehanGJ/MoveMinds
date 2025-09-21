@@ -59,7 +59,7 @@
     /* Gradients for modern fitness theme */
     --gradient-primary: linear-gradient(135deg, hsl(142 69% 58%), hsl(142 84% 60%));
     --gradient-secondary: linear-gradient(135deg, hsl(220 18% 16%), hsl(220 18% 20%));
-    --gradient-hero: linear-gradient(135deg, hsl(220 20% 8%) 0%, hsl(220 18% 12%) 50%, hsl(142 69% 58% / 0.1) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(220 20% 8%) 0%, hsl(220 18% 12%) 30%, hsl(142 69% 58% / 0.3) 100%);
     --gradient-card: linear-gradient(135deg, hsl(220 18% 12%), hsl(220 18% 16%));
     
      /* Modern shadows for clean design */
