@@ -39,7 +39,7 @@ export const AdminPrograms = () => {
   const fetchPrograms = async () => {
     try {
       setLoading(true);
-      const params = {
+      const params: any = {
         page: currentPage,
         size: 10,
         sortBy: "createdAt",
@@ -354,7 +354,7 @@ export const AdminPrograms = () => {
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(6)].map((_, i) => (
-            <Card key={i} variant="neumorphic" className="animate-pulse overflow-hidden">
+            <Card key={i} className="animate-pulse overflow-hidden">
               {/* Status bar skeleton */}
               <div className="h-1 bg-muted/30"></div>
               
@@ -442,7 +442,6 @@ export const AdminPrograms = () => {
           {programs.map((program) => (
             <Card 
               key={program.id} 
-              variant="neumorphic" 
               className="group hover:shadow-glow transition-all duration-300 hover:-translate-y-1 overflow-hidden relative"
             >
               {/* Status Indicator Bar */}
