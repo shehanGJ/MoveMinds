@@ -34,10 +34,10 @@ export const Header = ({ onMenuToggle }: HeaderProps) => {
   console.log('Header: Dashboard URL is:', dashboardUrl);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-gradient-card/95 backdrop-blur supports-[backdrop-filter]:bg-gradient-card/60 shadow-card">
-      <div className="container flex h-16 items-center px-4">
+    <header className="fixed top-0 left-0 right-0 z-50 w-full border-b border-border bg-gradient-card/95 backdrop-blur supports-[backdrop-filter]:bg-gradient-card/60 shadow-card">
+      <div className="flex h-16 items-center justify-between px-4 md:px-6">
         {/* Left Section - Logo */}
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2">
           {onMenuToggle && (
             <Button
               variant="ghost"
@@ -61,7 +61,7 @@ export const Header = ({ onMenuToggle }: HeaderProps) => {
         </div>
 
         {/* Middle Section - Navigation */}
-        <nav className="hidden md:flex items-center gap-8 flex-1 justify-center">
+        <nav className="hidden md:flex items-center gap-8">
           <Link 
             to="/programs" 
             className="text-sm font-semibold text-muted-foreground hover:text-primary transition-all duration-200 hover:shadow-subtle px-3 py-2 rounded-lg hover:bg-primary/10"
@@ -95,7 +95,7 @@ export const Header = ({ onMenuToggle }: HeaderProps) => {
         </nav>
 
         {/* Right Section - Profile/Notification Icons */}
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2">
           {isAuthenticated ? (
             <>
               <Button variant="ghost" size="icon" className="relative hover:bg-primary/10">

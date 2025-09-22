@@ -79,6 +79,10 @@ const SelectContent = React.forwardRef<
         className
       )}
       position={position}
+      onOpenAutoFocus={(e) => e.preventDefault()}
+      onCloseAutoFocus={(e) => e.preventDefault()}
+      sideOffset={4}
+      alignOffset={0}
       {...props}
     >
       <SelectScrollUpButton />

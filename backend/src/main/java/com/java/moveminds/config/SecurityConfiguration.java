@@ -48,6 +48,7 @@ public class SecurityConfiguration {
                         .requestMatchers("/auth/**").permitAll() // Authentication endpoints
                         .requestMatchers("/upload/**").permitAll() // File upload endpoints
                         .requestMatchers("/uploads/**").permitAll() // Static file access
+                        .requestMatchers("/files/**").permitAll() // File serving endpoints
                         .requestMatchers("/h2-console/**").permitAll() // H2 console
                         .requestMatchers("/api/test/**").permitAll() // Test endpoints
                         .requestMatchers("/cities/**").permitAll() // City data
@@ -67,6 +68,12 @@ public class SecurityConfiguration {
                         
                         // User program endpoints - Authenticated users only
                         .requestMatchers("/user-programs/**").authenticated() // User program management
+                        
+                        // Program content endpoints - Authenticated users only
+                        .requestMatchers("/api/programs/**").authenticated() // Program content management
+                        
+                        // Progress tracking endpoints - Authenticated users only
+                        .requestMatchers("/api/progress/**").authenticated() // User progress tracking
                         
                         // Payment endpoints - Authenticated users only
                         .requestMatchers("/api/payment/**").authenticated() // Payment processing

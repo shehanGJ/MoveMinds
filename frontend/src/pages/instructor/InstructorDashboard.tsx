@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card-enhanced";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,13 +40,15 @@ import {
   CheckCircle
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { instructorApi, InstructorStatsResponse, ProgramEnrollmentResponse, PageResponse, Program, categoryApi, locationApi, Category, Location } from '@/lib/api';
+import { instructorApi, InstructorStatsResponse, ProgramEnrollmentResponse, PageResponse, Program, ProgramStatsResponse, categoryApi, locationApi, Category, Location } from '@/lib/api';
 import { toast } from '@/hooks/use-toast';
 
 export const InstructorDashboard = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<InstructorStatsResponse | null>(null);
   const [programs, setPrograms] = useState<PageResponse<Program> | null>(null);
   const [students, setStudents] = useState<PageResponse<ProgramEnrollmentResponse> | null>(null);
+  const [programStats, setProgramStats] = useState<Map<number, ProgramStatsResponse>>(new Map());
   const [categories, setCategories] = useState<Category[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
@@ -82,6 +85,25 @@ export const InstructorDashboard = () => {
         setStats(statsResponse.data);
         setPrograms(programsResponse.data);
         setStudents(studentsResponse.data);
+        
+        // Fetch program stats for each program
+        if (programsResponse.data?.content) {
+          const statsPromises = programsResponse.data.content.map(program => 
+            instructorApi.getProgramStats(program.id).catch((error) => {
+              console.error(`Failed to fetch stats for program ${program.id}:`, error);
+              return null;
+            })
+          );
+          const statsResults = await Promise.all(statsPromises);
+          
+          const statsMap = new Map<number, ProgramStatsResponse>();
+          statsResults.forEach((stats, index) => {
+            if (stats) {
+              statsMap.set(programsResponse.data.content[index].id, stats);
+            }
+          });
+          setProgramStats(statsMap);
+        }
       } catch (instructorError) {
         // Instructor data fetch failed (authentication required)
         // Don't show error toast for instructor data
@@ -299,7 +321,7 @@ export const InstructorDashboard = () => {
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Users className="h-4 w-4" />
-                            <span>0 students</span>
+                            <span>{programStats.get(program.id)?.totalStudents || 0} students</span>
                           </div>
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Clock className="h-4 w-4" />
@@ -316,9 +338,11 @@ export const InstructorDashboard = () => {
                         </div>
 
                         <div className="flex items-center gap-2">
-                          <Button size="sm" variant="fitness">
-                            <Eye className="h-4 w-4 mr-2" />
-                            View Details
+                          <Button size="sm" variant="fitness" asChild>
+                            <Link to={`/instructor/programs/${program.id}/content`}>
+                              <BookOpen className="h-4 w-4 mr-2" />
+                              Manage Content
+                            </Link>
                           </Button>
                           <Button size="sm" variant="outline">
                             <Edit className="h-4 w-4 mr-2" />
@@ -343,6 +367,10 @@ export const InstructorDashboard = () => {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => navigate(`/instructor/programs/${program.id}/content`)}>
+                            <BookOpen className="h-4 w-4 mr-2" />
+                            Manage Content
+                          </DropdownMenuItem>
                           <DropdownMenuItem>
                             <Users className="h-4 w-4 mr-2" />
                             Manage Students

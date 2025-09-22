@@ -8,11 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "@/hooks/use-toast";
+import { programContentApi, progressApi, type ProgramLearningContent, type ProgramLesson, type ProgramModule, type ProgramLearningProgressResponse, type LessonProgressResponse } from "@/lib/api";
 import {
   Play,
-  Pause,
-  SkipForward,
-  SkipBack,
   Clock,
   CheckCircle,
   Circle,
@@ -20,108 +18,297 @@ import {
   MessageSquare,
   Download,
   Star,
-  Volume2,
-  Settings,
-  Maximize,
   ArrowLeft,
   FileText,
-  Users
+  Users,
+  SkipBack,
+  SkipForward
 } from "lucide-react";
 
-// Types
-interface Lesson {
-  id: number;
-  title: string;
-  duration: string;
-  completed: boolean;
-  videoUrl: string;
-}
-
-interface LessonWithModule extends Lesson {
-  moduleTitle: string;
-}
-
-// Mock data - replace with API calls
-const mockProgram = {
-  id: 1,
-  title: "Complete Fitness Transformation",
-  description: "A comprehensive 12-week program designed to transform your body and mind",
-  instructor: "Sarah Johnson",
-  totalLessons: 24,
-  totalDuration: "8h 45m",
-  difficulty: "Intermediate",
-  rating: 4.8,
-  modules: [
-    {
-      id: 1,
-      title: "Foundation & Assessment",
-      lessons: [
-        { id: 1, title: "Welcome & Program Overview", duration: "12:30", completed: true, videoUrl: "https://example.com/video1" },
-        { id: 2, title: "Fitness Assessment", duration: "18:45", completed: true, videoUrl: "https://example.com/video2" },
-        { id: 3, title: "Goal Setting Workshop", duration: "15:20", completed: false, videoUrl: "https://example.com/video3" },
-      ]
-    },
-    {
-      id: 2,
-      title: "Strength Training Fundamentals",
-      lessons: [
-        { id: 4, title: "Proper Form & Technique", duration: "22:15", completed: false, videoUrl: "https://example.com/video4" },
-        { id: 5, title: "Progressive Overload", duration: "16:30", completed: false, videoUrl: "https://example.com/video5" },
-        { id: 6, title: "Compound Movements", duration: "25:10", completed: false, videoUrl: "https://example.com/video6" },
-      ]
-    },
-    {
-      id: 3,
-      title: "Nutrition & Recovery",
-      lessons: [
-        { id: 7, title: "Macro Nutrition Basics", duration: "20:45", completed: false, videoUrl: "https://example.com/video7" },
-        { id: 8, title: "Meal Planning Strategy", duration: "14:20", completed: false, videoUrl: "https://example.com/video8" },
-        { id: 9, title: "Recovery & Sleep", duration: "18:30", completed: false, videoUrl: "https://example.com/video9" },
-      ]
+// Helper function to convert YouTube URL to embed URL
+const getYouTubeEmbedUrl = (url: string, autoplay: boolean = false): string => {
+  if (!url) return '';
+  
+  // Handle different YouTube URL formats
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+    /youtube\.com\/watch\?.*v=([^&\n?#]+)/
+  ];
+  
+  let videoId = '';
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match && match[1]) {
+      videoId = match[1];
+      break;
     }
-  ]
+  }
+  
+  if (!videoId) {
+    // If it's already an embed URL, extract video ID from it
+    const embedMatch = url.match(/youtube\.com\/embed\/([^&\n?#]+)/);
+    if (embedMatch && embedMatch[1]) {
+      videoId = embedMatch[1];
+    } else {
+      return url; // Return original URL if no pattern matches
+    }
+  }
+  
+  // Build embed URL with proper parameters
+  const baseUrl = `https://www.youtube.com/embed/${videoId}`;
+  const params = new URLSearchParams({
+    'rel': '0', // Don't show related videos
+    'modestbranding': '1', // Minimal YouTube branding
+    'showinfo': '0', // Don't show video info
+    'iv_load_policy': '3', // Hide annotations
+    'fs': '1', // Allow fullscreen
+    'cc_load_policy': '0', // Don't show captions by default
+    'playsinline': '1', // Play inline on mobile
+  });
+  
+  if (autoplay) {
+    params.set('autoplay', '1');
+    params.set('mute', '1'); // Mute is required for autoplay to work
+  }
+  
+  return `${baseUrl}?${params.toString()}`;
 };
+
+// Helper function to extract YouTube video ID for thumbnail
+const getYouTubeVideoId = (url: string): string => {
+  if (!url) return '';
+  
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+    /youtube\.com\/watch\?.*v=([^&\n?#]+)/
+  ];
+  
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match && match[1]) {
+      return match[1];
+    }
+  }
+  
+  return '';
+};
+
+
+// Types
+interface LessonWithModule extends ProgramLesson {
+  moduleTitle: string;
+  completed?: boolean;
+  progress?: LessonProgressResponse;
+}
 
 export const ProgramLearning = () => {
   const { programId } = useParams();
   const navigate = useNavigate();
-  const [currentLesson, setCurrentLesson] = useState(1);
+  const [program, setProgram] = useState<ProgramLearningContent | null>(null);
+  const [currentLesson, setCurrentLesson] = useState<LessonWithModule | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [progress, setProgress] = useState(35);
   const [notes, setNotes] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
+  const [isLoading, setIsLoading] = useState(true);
+  const [videoError, setVideoError] = useState<string | null>(null);
+  const [progressData, setProgressData] = useState<ProgramLearningProgressResponse | null>(null);
 
-  const getCurrentLesson = (): LessonWithModule => {
-    for (const module of mockProgram.modules) {
-      const lesson = module.lessons.find(l => l.id === currentLesson);
-      if (lesson) return { ...lesson, moduleTitle: module.title };
+  useEffect(() => {
+    if (programId) {
+      fetchProgramData();
     }
-    return { ...mockProgram.modules[0].lessons[0], moduleTitle: mockProgram.modules[0].title };
+  }, [programId]);
+
+  const fetchProgramData = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Fetch program content and progress data in parallel
+      const [programResponse, progressResponse] = await Promise.all([
+        programContentApi.getProgramLearningContent(parseInt(programId!)),
+        progressApi.getProgramProgress(parseInt(programId!))
+      ]);
+      
+      setProgram(programResponse.data);
+      setProgressData(progressResponse.data);
+      
+      // Set the first lesson as current if available
+      if (programResponse.data.modules.length > 0 && programResponse.data.modules[0].lessons.length > 0) {
+        const firstLesson = programResponse.data.modules[0].lessons[0];
+        
+        // Find progress data for this lesson
+        const lessonProgress = progressResponse.data.lessonProgress.find(
+          p => p.lessonId === firstLesson.id
+        );
+        
+        setCurrentLesson({
+          ...firstLesson,
+          moduleTitle: programResponse.data.modules[0].title,
+          completed: lessonProgress?.isCompleted || false,
+          progress: lessonProgress
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load program content"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getCurrentLesson = (): LessonWithModule | null => {
+    if (!program || !currentLesson) return null;
+    
+    for (const module of program.modules) {
+      const lesson = module.lessons.find(l => l.id === currentLesson.id);
+      if (lesson) return { ...lesson, moduleTitle: module.title, completed: currentLesson.completed };
+    }
+    return currentLesson;
   };
 
   const getNextLesson = () => {
-    const allLessons = mockProgram.modules.flatMap(m => m.lessons);
-    const currentIndex = allLessons.findIndex(l => l.id === currentLesson);
+    if (!program || !currentLesson) return null;
+    
+    const allLessons = program.modules.flatMap(m => m.lessons);
+    const currentIndex = allLessons.findIndex(l => l.id === currentLesson.id);
     return currentIndex < allLessons.length - 1 ? allLessons[currentIndex + 1] : null;
   };
 
   const getPreviousLesson = () => {
-    const allLessons = mockProgram.modules.flatMap(m => m.lessons);
-    const currentIndex = allLessons.findIndex(l => l.id === currentLesson);
+    if (!program || !currentLesson) return null;
+    
+    const allLessons = program.modules.flatMap(m => m.lessons);
+    const currentIndex = allLessons.findIndex(l => l.id === currentLesson.id);
     return currentIndex > 0 ? allLessons[currentIndex - 1] : null;
   };
 
-  const markAsCompleted = () => {
-    // Mock completion logic
+  const toggleLessonCompletion = async () => {
+    if (!currentLesson) return;
+    
+    try {
+      if (currentLesson.completed) {
+        // Mark as incomplete via API
+        await progressApi.markLessonIncomplete(currentLesson.id);
+        
+        // Update local state
+        setCurrentLesson(prev => prev ? { ...prev, completed: false } : null);
+        
+        // Update progress data
+        if (progressData) {
+          const updatedProgress = { ...progressData };
+          updatedProgress.completedLessons = Math.max(0, updatedProgress.completedLessons - 1);
+          updatedProgress.progressPercentage = (updatedProgress.completedLessons / updatedProgress.totalLessons) * 100;
+          updatedProgress.lessonProgress = updatedProgress.lessonProgress.map(lesson => 
+            lesson.lessonId === currentLesson.id 
+              ? { ...lesson, isCompleted: false }
+              : lesson
+          );
+          setProgressData(updatedProgress);
+        }
+        
+        toast({
+          title: "Lesson marked as incomplete",
+          description: "You can now mark it as complete again.",
+        });
+      } else {
+        // Mark as complete
+        await progressApi.markLessonComplete(currentLesson.id, currentLesson.progress?.watchTimeSeconds || 0);
+        
+        // Update local state
+        setCurrentLesson(prev => prev ? { ...prev, completed: true } : null);
+        
+        // Update progress data
+        if (progressData) {
+          const updatedProgress = { ...progressData };
+          updatedProgress.completedLessons += 1;
+          updatedProgress.progressPercentage = (updatedProgress.completedLessons / updatedProgress.totalLessons) * 100;
+          updatedProgress.lessonProgress = updatedProgress.lessonProgress.map(lesson => 
+            lesson.lessonId === currentLesson.id 
+              ? { ...lesson, isCompleted: true }
+              : lesson
+          );
+          setProgressData(updatedProgress);
+        }
+        
     toast({
       title: "Lesson completed!",
       description: "Great job! Moving to the next lesson.",
     });
+        
     const nextLesson = getNextLesson();
     if (nextLesson) {
-      setCurrentLesson(nextLesson.id);
+          // Find progress data for next lesson
+          const nextLessonProgress = progressData?.lessonProgress.find(
+            p => p.lessonId === nextLesson.id
+          );
+          
+          setCurrentLesson({
+            ...nextLesson,
+            moduleTitle: program?.modules.find(m => m.lessons.some(l => l.id === nextLesson.id))?.title || "",
+            completed: nextLessonProgress?.isCompleted || false,
+            progress: nextLessonProgress
+          });
+        }
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update lesson status"
+      });
     }
   };
+
+  const handleVideoError = () => {
+    setVideoError("Video failed to load. This might be due to YouTube restrictions or network issues.");
+  };
+
+  const openVideoInNewTab = () => {
+    if (currentLesson?.videoUrl) {
+      window.open(currentLesson.videoUrl, '_blank');
+    }
+  };
+
+  const handleLessonSelect = (lesson: ProgramLesson, moduleTitle: string) => {
+    // Find progress data for this lesson
+    const lessonProgress = progressData?.lessonProgress.find(
+      p => p.lessonId === lesson.id
+    );
+    
+    setCurrentLesson({
+      ...lesson,
+      moduleTitle,
+      completed: lessonProgress?.isCompleted || false,
+      progress: lessonProgress
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading program content...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!program) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-muted-foreground">Program not found</p>
+          <Button onClick={() => navigate("/my-programs")} className="mt-4">
+            Back to Programs
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   const lesson = getCurrentLesson();
   const nextLesson = getNextLesson();
@@ -144,18 +331,20 @@ export const ProgramLearning = () => {
                 Back to Programs
               </Button>
               <div>
-                <h1 className="text-xl font-bold text-foreground">{mockProgram.title}</h1>
-                <p className="text-sm text-muted-foreground">by {mockProgram.instructor}</p>
+                <h1 className="text-xl font-bold text-foreground">{program.name}</h1>
+                <p className="text-sm text-muted-foreground">by {program.instructorName}</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
               <Badge variant="secondary" className="gap-1">
                 <Star className="h-3 w-3 fill-current" />
-                {mockProgram.rating}
+                {program.difficultyLevel}
               </Badge>
               <div className="text-right">
-                <div className="text-sm font-medium text-foreground">{progress}% Complete</div>
-                <Progress value={progress} className="w-32" />
+                <div className="text-sm font-medium text-foreground">
+                  {Math.round(progressData?.progressPercentage || 0)}% Complete
+                </div>
+                <Progress value={progressData?.progressPercentage || 0} className="w-32" />
               </div>
             </div>
           </div>
@@ -169,69 +358,154 @@ export const ProgramLearning = () => {
             <Card className="mb-6">
               <CardContent className="p-0">
                 {/* Video Player */}
-                <div className="relative aspect-video bg-black rounded-t-lg overflow-hidden">
-                  <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
+                <div className="relative aspect-video bg-black rounded-t-lg overflow-hidden group">
+                  {lesson?.videoUrl ? (
+                    <>
+                      {/* Video Thumbnail/Preview */}
+                      {!isPlaying && (
+                        <div 
+                          className="absolute inset-0 bg-gradient-hero cursor-pointer transition-all duration-300 hover:opacity-90"
+                          onClick={() => setIsPlaying(true)}
+                        >
+                          {/* YouTube Thumbnail Background */}
+                          <div 
+                            className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-40"
+                            style={{
+                              backgroundImage: `url(https://img.youtube.com/vi/${getYouTubeVideoId(lesson.videoUrl)}/maxresdefault.jpg)`
+                            }}
+                          />
+                          
+                          {/* Homepage-style overlay */}
+                          <div className="absolute inset-0 bg-black/20"></div>
+                          
+                          {/* Overlay Content */}
+                          <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-center text-white">
-                      <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-primary/20 flex items-center justify-center backdrop-blur-sm">
-                        {isPlaying ? (
-                          <Pause className="h-8 w-8" />
-                        ) : (
-                          <Play className="h-8 w-8 ml-1" />
+                              {/* Large Play Button with Homepage-style gradient */}
+                              <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-primary flex items-center justify-center backdrop-blur-sm shadow-2xl transition-all duration-300 hover:scale-110 group-hover:scale-110 hover:shadow-glow">
+                                <Play className="h-10 w-10 ml-1 text-white drop-shadow-lg" />
+                              </div>
+                              
+                              {/* Lesson Info */}
+                              <div className="space-y-2">
+                                <h3 className="text-xl font-semibold mb-2 bg-gradient-primary bg-clip-text text-transparent drop-shadow-lg">{lesson.title}</h3>
+                                <p className="text-sm text-white/80 drop-shadow-md">{lesson.moduleTitle}</p>
+                                {lesson.durationMinutes && (
+                                  <div className="flex items-center justify-center gap-2 text-sm text-white/70 drop-shadow-md">
+                                    <Clock className="h-4 w-4" />
+                                    <span>{Math.floor(lesson.durationMinutes / 60)}:{(lesson.durationMinutes % 60).toString().padStart(2, '0')}</span>
+                                  </div>
                         )}
                       </div>
-                      <p className="text-lg font-medium mb-2">{lesson.title}</p>
-                      <p className="text-sm text-white/80">{lesson.moduleTitle}</p>
                     </div>
                   </div>
                   
-                  {/* Video Controls */}
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-                    <div className="flex items-center justify-between text-white">
-                      <div className="flex items-center gap-2">
+                          {/* Hover Effect - Homepage style */}
+                          <div className="absolute inset-0 bg-gradient-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        </div>
+                      )}
+                      
+                      {/* YouTube Video with Default Controls */}
+                      {isPlaying && (
+                        <div className="relative w-full h-full">
+                          {videoError ? (
+                            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-red-500/20 to-red-500/5">
+                              <div className="text-center text-white p-6">
+                                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center backdrop-blur-sm">
+                                  <Play className="h-8 w-8 ml-1" />
+                                </div>
+                                <h3 className="text-lg font-semibold mb-2">Video Playback Error</h3>
+                                <p className="text-sm text-white/80 mb-4">{videoError}</p>
+                                <div className="space-y-2">
                         <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => setIsPlaying(!isPlaying)}
-                          className="text-white hover:text-white hover:bg-white/20"
-                        >
-                          {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                                    onClick={() => {
+                                      setVideoError(null);
+                                      setIsPlaying(false);
+                                    }}
+                                    className="bg-primary hover:bg-primary/90 text-white"
+                                  >
+                                    Back to Preview
                         </Button>
-                        <span className="text-sm">0:00 / {lesson.duration}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button size="sm" variant="ghost" className="text-white hover:text-white hover:bg-white/20">
-                          <Volume2 className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="ghost" className="text-white hover:text-white hover:bg-white/20">
-                          <Settings className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="ghost" className="text-white hover:text-white hover:bg-white/20">
-                          <Maximize className="h-4 w-4" />
+                                  <Button
+                                    onClick={openVideoInNewTab}
+                                    variant="outline"
+                                    className="text-white border-white/20 hover:bg-white/10"
+                                  >
+                                    Watch on YouTube
                         </Button>
                       </div>
                     </div>
                   </div>
+                          ) : (
+                            <>
+                              <iframe
+                                src={getYouTubeEmbedUrl(lesson.videoUrl, true)}
+                                title={lesson.title}
+                                className="w-full h-full"
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                allowFullScreen
+                                onError={handleVideoError}
+                                onLoad={() => setVideoError(null)}
+                              />
+                              
+                              {/* Simple Back Button Overlay */}
+                              <div className="absolute top-4 left-4">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => setIsPlaying(false)}
+                                  className="text-white hover:text-white hover:bg-white/20 bg-black/30 backdrop-blur-sm"
+                                >
+                                  <ArrowLeft className="h-4 w-4 mr-2" />
+                                  Back to Preview
+                                </Button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-hero">
+                      <div className="absolute inset-0 bg-black/20"></div>
+                      <div className="relative text-center text-white">
+                        <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-primary flex items-center justify-center backdrop-blur-sm shadow-2xl">
+                          <Play className="h-8 w-8 ml-1 text-white drop-shadow-lg" />
+                        </div>
+                        <h3 className="text-lg font-semibold mb-2 bg-gradient-primary bg-clip-text text-transparent drop-shadow-lg">{lesson?.title || "No lesson selected"}</h3>
+                        <p className="text-sm text-white/80 drop-shadow-md">{lesson?.moduleTitle || ""}</p>
+                        {!lesson?.videoUrl && (
+                          <p className="text-sm text-white/60 mt-2 drop-shadow-md">No video available for this lesson</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Lesson Info */}
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h2 className="text-2xl font-bold text-foreground mb-2">{lesson.title}</h2>
+                      <h2 className="text-2xl font-bold text-foreground mb-2">{lesson?.title || "No lesson selected"}</h2>
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Clock className="h-4 w-4" />
-                          {lesson.duration}
+                          {lesson?.durationMinutes ? `${Math.floor(lesson.durationMinutes / 60)}:${(lesson.durationMinutes % 60).toString().padStart(2, '0')}` : "0:00"}
                         </span>
                         <span className="flex items-center gap-1">
                           <BookOpen className="h-4 w-4" />
-                          {lesson.moduleTitle}
+                          {lesson?.moduleTitle || ""}
                         </span>
                       </div>
                     </div>
-                    <Button onClick={markAsCompleted} className="gap-2">
+                    <Button 
+                      onClick={toggleLessonCompletion} 
+                      className="gap-2"
+                      variant={currentLesson?.completed ? "outline" : "default"}
+                    >
                       <CheckCircle className="h-4 w-4" />
-                      Mark Complete
+                      {currentLesson?.completed ? "Mark Incomplete" : "Mark Complete"}
                     </Button>
                   </div>
 
@@ -239,7 +513,12 @@ export const ProgramLearning = () => {
                   <div className="flex items-center justify-between pt-4 border-t border-border">
                     <Button
                       variant="outline"
-                      onClick={() => previousLesson && setCurrentLesson(previousLesson.id)}
+                      onClick={() => {
+                        if (previousLesson) {
+                          const moduleTitle = program.modules.find(m => m.lessons.some(l => l.id === previousLesson.id))?.title || "";
+                          setCurrentLesson({ ...previousLesson, moduleTitle, completed: false });
+                        }
+                      }}
                       disabled={!previousLesson}
                       className="gap-2"
                     >
@@ -247,7 +526,12 @@ export const ProgramLearning = () => {
                       Previous
                     </Button>
                     <Button
-                      onClick={() => nextLesson && setCurrentLesson(nextLesson.id)}
+                      onClick={() => {
+                        if (nextLesson) {
+                          const moduleTitle = program.modules.find(m => m.lessons.some(l => l.id === nextLesson.id))?.title || "";
+                          setCurrentLesson({ ...nextLesson, moduleTitle, completed: false });
+                        }
+                      }}
                       disabled={!nextLesson}
                       className="gap-2"
                     >
@@ -287,23 +571,29 @@ export const ProgramLearning = () => {
                     <div>
                       <h3 className="font-semibold text-foreground mb-2">About this lesson</h3>
                       <p className="text-muted-foreground">
-                        In this lesson, you'll learn the fundamental concepts that will serve as the foundation 
-                        for your fitness journey. We'll cover proper assessment techniques and help you set 
-                        realistic, achievable goals.
+                        {lesson?.description || lesson?.content || "No description available for this lesson."}
                       </p>
                     </div>
                     <Separator />
                     <div>
                       <h3 className="font-semibold text-foreground mb-2">Resources</h3>
                       <div className="space-y-2">
-                        <Button variant="outline" size="sm" className="gap-2">
+                        {lesson?.resources && lesson.resources.length > 0 ? (
+                          lesson.resources.map((resource) => (
+                            <Button 
+                              key={resource.id} 
+                              variant="outline" 
+                              size="sm" 
+                              className="gap-2"
+                              onClick={() => window.open(resource.fileUrl, '_blank')}
+                            >
                           <Download className="h-4 w-4" />
-                          Download Worksheet
+                              {resource.title}
                         </Button>
-                        <Button variant="outline" size="sm" className="gap-2">
-                          <Download className="h-4 w-4" />
-                          Exercise Guide PDF
-                        </Button>
+                          ))
+                        ) : (
+                          <p className="text-muted-foreground text-sm">No resources available for this lesson.</p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -360,12 +650,12 @@ export const ProgramLearning = () => {
               <CardHeader>
                 <CardTitle className="text-lg">Course Content</CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  {mockProgram.totalLessons} lessons • {mockProgram.totalDuration}
+                  {program.totalLessons} lessons • {Math.floor(program.totalDurationMinutes / 60)}h {program.totalDurationMinutes % 60}m
                 </p>
               </CardHeader>
               <CardContent className="p-0">
                 <ScrollArea className="h-[600px]">
-                  {mockProgram.modules.map((module) => (
+                  {program.modules.map((module) => (
                     <div key={module.id} className="border-b border-border last:border-0">
                       <div className="p-4 bg-muted/30">
                         <h4 className="font-medium text-foreground">{module.title}</h4>
@@ -377,26 +667,40 @@ export const ProgramLearning = () => {
                         {module.lessons.map((lesson) => (
                           <button
                             key={lesson.id}
-                            onClick={() => setCurrentLesson(lesson.id)}
+                            onClick={() => handleLessonSelect(lesson, module.title)}
                             className={`w-full p-3 text-left hover:bg-muted/50 transition-colors border-l-2 ${
-                              currentLesson === lesson.id
+                              currentLesson?.id === lesson.id
                                 ? "border-primary bg-primary/5"
                                 : "border-transparent"
                             }`}
                           >
                             <div className="flex items-center gap-3">
-                              {lesson.completed ? (
-                                <CheckCircle className="h-4 w-4 text-primary flex-shrink-0" />
-                              ) : (
-                                <Circle className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                              )}
+                              {(() => {
+                                // Find progress data for this lesson
+                                const lessonProgress = progressData?.lessonProgress.find(
+                                  p => p.lessonId === lesson.id
+                                );
+                                
+                                if (lessonProgress?.isCompleted) {
+                                  return (
+                                    <div className="relative flex-shrink-0">
+                                      <Circle className="h-4 w-4 text-muted-foreground" />
+                                      <CheckCircle className="h-4 w-4 text-green-500 absolute inset-0" />
+                                    </div>
+                                  );
+                                } else {
+                                  return <Circle className="h-4 w-4 text-muted-foreground flex-shrink-0" />;
+                                }
+                              })()}
                               <div className="flex-1 min-w-0">
                                 <p className={`text-sm font-medium truncate ${
-                                  currentLesson === lesson.id ? "text-primary" : "text-foreground"
+                                  currentLesson?.id === lesson.id ? "text-primary" : "text-foreground"
                                 }`}>
                                   {lesson.title}
                                 </p>
-                                <p className="text-xs text-muted-foreground">{lesson.duration}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {lesson.durationMinutes ? `${Math.floor(lesson.durationMinutes / 60)}:${(lesson.durationMinutes % 60).toString().padStart(2, '0')}` : "0:00"}
+                                </p>
                               </div>
                             </div>
                           </button>

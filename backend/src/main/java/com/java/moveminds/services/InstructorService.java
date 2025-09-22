@@ -5,6 +5,7 @@ import com.java.moveminds.dto.response.FitnessProgramListResponse;
 import com.java.moveminds.dto.response.FitnessProgramResponse;
 import com.java.moveminds.dto.response.InstructorStatsResponse;
 import com.java.moveminds.dto.response.ProgramEnrollmentResponse;
+import com.java.moveminds.dto.response.ProgramStatsResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,4 +25,5 @@ public interface InstructorService {
     Page<ProgramEnrollmentResponse> getAllEnrollments(Principal principal, Pageable pageable);
     ProgramEnrollmentResponse updateEnrollmentStatus(Principal principal, Integer enrollmentId, String status);
     Page<ProgramEnrollmentResponse> getStudents(Principal principal, Pageable pageable);
+    ProgramStatsResponse getProgramStats(Principal principal, Integer programId);
 }

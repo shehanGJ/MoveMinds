@@ -166,6 +166,129 @@ export interface NonAdvisersResponse {
   name: string;
 }
 
+// Program Content Types
+export interface ProgramModule {
+  id: number;
+  title: string;
+  description?: string;
+  orderIndex: number;
+  isPublished: boolean;
+  createdAt: string;
+  updatedAt: string;
+  lessons: ProgramLesson[];
+}
+
+export interface ProgramLesson {
+  id: number;
+  title: string;
+  description?: string;
+  content?: string;
+  videoUrl?: string;
+  durationMinutes?: number;
+  orderIndex: number;
+  isPublished: boolean;
+  isPreview: boolean;
+  createdAt: string;
+  updatedAt: string;
+  resources: ProgramResource[];
+}
+
+export interface ProgramResource {
+  id: number;
+  title: string;
+  description?: string;
+  fileUrl: string;
+  fileType: string;
+  fileSizeBytes?: number;
+  orderIndex: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProgramLearningContent {
+  id: number;
+  name: string;
+  description: string;
+  difficultyLevel: string;
+  duration: number;
+  price: number;
+  instructorName: string;
+  instructorAvatarUrl?: string;
+  categoryName?: string;
+  locationName?: string;
+  createdAt: string;
+  modules: ProgramModule[];
+  totalLessons: number;
+  totalDurationMinutes: number;
+  completedLessons: number;
+  progressPercentage: number;
+}
+
+// Progress Tracking Interfaces
+export interface UserProgressResponse {
+  id: number;
+  userId: number;
+  programId: number;
+  lessonId: number;
+  lessonTitle: string;
+  moduleTitle: string;
+  isCompleted: boolean;
+  completedAt?: string;
+  watchTimeSeconds: number;
+  lastWatchedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserProgramProgressResponse {
+  id: number;
+  userId: number;
+  programId: number;
+  programName: string;
+  totalLessons: number;
+  completedLessons: number;
+  progressPercentage: number;
+  totalWatchTimeSeconds: number;
+  lastAccessedAt?: string;
+  startedAt?: string;
+  completedAt?: string;
+  isProgramCompleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProgramLearningProgressResponse {
+  programId: number;
+  programName: string;
+  totalLessons: number;
+  completedLessons: number;
+  progressPercentage: number;
+  totalWatchTimeSeconds: number;
+  isProgramCompleted: boolean;
+  lessonProgress: LessonProgressResponse[];
+}
+
+export interface LessonProgressResponse {
+  lessonId: number;
+  lessonTitle: string;
+  moduleTitle: string;
+  isCompleted: boolean;
+  watchTimeSeconds: number;
+  durationMinutes?: number;
+  isPreview: boolean;
+}
+
+export interface UserProgressStatsResponse {
+  totalProgramsEnrolled: number;
+  completedPrograms: number;
+  inProgressPrograms: number;
+  averageProgressPercentage: number;
+  totalLessonsCompleted: number;
+  totalWatchTimeHours: number;
+  currentStreakDays: number;
+  longestStreakDays: number;
+}
+
 // Admin API Types
 export interface AdminUserResponse {
   id: number;
@@ -362,6 +485,16 @@ export interface PageResponse<T> {
   last: boolean;
 }
 
+export interface ProgramStatsResponse {
+  programId: number;
+  programName: string;
+  totalStudents: number;
+  activeStudents: number;
+  totalEnrollments: number;
+  activeEnrollments: number;
+  completedEnrollments: number;
+}
+
 export interface NewsItem {
   id: number;
   title: string;
@@ -546,6 +679,80 @@ export const instructorApi = {
     api.put<ProgramEnrollmentResponse>(`/instructor/enrollments/${enrollmentId}/status?status=${status}`),
   getStudents: (params?: { page?: number; size?: number }) => 
     api.get<PageResponse<ProgramEnrollmentResponse>>('/instructor/students', { params }),
+  getProgramStats: (programId: number) => 
+    api.get<ProgramStatsResponse>(`/instructor/programs/${programId}/stats`),
+};
+
+// Program Content API
+export const programContentApi = {
+  // Program Learning Content
+  getProgramLearningContent: (programId: number) => 
+    api.get<ProgramLearningContent>(`/api/programs/${programId}/learning-content`),
+  
+  // Module Management
+  createModule: (programId: number, moduleData: Partial<ProgramModule>) => 
+    api.post<ProgramModule>(`/api/programs/${programId}/modules`, moduleData),
+  getProgramModules: (programId: number) => 
+    api.get<ProgramModule[]>(`/api/programs/${programId}/modules`),
+  updateModule: (moduleId: number, moduleData: Partial<ProgramModule>) => 
+    api.put<ProgramModule>(`/api/programs/modules/${moduleId}`, moduleData),
+  deleteModule: (moduleId: number) => 
+    api.delete(`/api/programs/modules/${moduleId}`),
+  reorderModules: (programId: number, moduleIds: number[]) => 
+    api.put(`/api/programs/${programId}/modules/reorder`, moduleIds),
+  
+  // Lesson Management
+  createLesson: (moduleId: number, lessonData: Partial<ProgramLesson>) => 
+    api.post<ProgramLesson>(`/api/programs/modules/${moduleId}/lessons`, lessonData),
+  getModuleLessons: (moduleId: number) => 
+    api.get<ProgramLesson[]>(`/api/programs/modules/${moduleId}/lessons`),
+  updateLesson: (lessonId: number, lessonData: Partial<ProgramLesson>) => 
+    api.put<ProgramLesson>(`/api/programs/lessons/${lessonId}`, lessonData),
+  deleteLesson: (lessonId: number) => 
+    api.delete(`/api/programs/lessons/${lessonId}`),
+  reorderLessons: (moduleId: number, lessonIds: number[]) => 
+    api.put(`/api/programs/modules/${moduleId}/lessons/reorder`, lessonIds),
+  
+  // Resource Management
+  createResource: (lessonId: number, formData: FormData) => 
+    api.post<ProgramResource>(`/api/programs/lessons/${lessonId}/resources`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }),
+  getLessonResources: (lessonId: number) => 
+    api.get<ProgramResource[]>(`/api/programs/lessons/${lessonId}/resources`),
+  updateResource: (resourceId: number, resourceData: Partial<ProgramResource>) => 
+    api.put<ProgramResource>(`/api/programs/resources/${resourceId}`, resourceData),
+  deleteResource: (resourceId: number) => 
+    api.delete(`/api/programs/resources/${resourceId}`),
+  reorderResources: (lessonId: number, resourceIds: number[]) => 
+    api.put(`/api/programs/lessons/${lessonId}/resources/reorder`, resourceIds),
+};
+
+// Progress Tracking API
+export const progressApi = {
+  markLessonComplete: (lessonId: number, watchTimeSeconds?: number) =>
+    api.post<UserProgressResponse>(`/api/progress/lessons/complete`, {
+      lessonId,
+      watchTimeSeconds: watchTimeSeconds || 0
+    }),
+  markLessonIncomplete: (lessonId: number) =>
+    api.post<UserProgressResponse>(`/api/progress/lessons/${lessonId}/incomplete`),
+  getProgramProgress: (programId: number) =>
+    api.get<ProgramLearningProgressResponse>(`/api/progress/programs/${programId}`),
+  getAllUserProgress: () =>
+    api.get<UserProgressResponse[]>(`/api/progress/programs`),
+  getLessonProgress: (lessonId: number) =>
+    api.get<UserProgressResponse>(`/api/progress/lessons/${lessonId}`),
+  updateWatchTime: (lessonId: number, watchTimeSeconds: number) =>
+    api.put<UserProgressResponse>(`/api/progress/lessons/${lessonId}/watch-time?watchTimeSeconds=${watchTimeSeconds}`),
+  initializeProgramProgress: (programId: number) =>
+    api.post(`/api/progress/programs/${programId}/initialize`),
+  getUserProgressStats: () =>
+    api.get<UserProgressStatsResponse>(`/api/progress/stats`),
+  isLessonCompleted: (lessonId: number) =>
+    api.get<boolean>(`/api/progress/lessons/${lessonId}/completed`),
 };
 
 // Category and Location API

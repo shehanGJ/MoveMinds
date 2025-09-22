@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import com.java.moveminds.dto.response.InstructorStatsResponse;
+import com.java.moveminds.dto.response.ProgramStatsResponse;
 import com.java.moveminds.services.InstructorService;
 import com.java.moveminds.services.instructor.InstructorProgramManagementService;
 import com.java.moveminds.services.instructor.InstructorStudentManagementService;
@@ -29,6 +30,17 @@ public class InstructorController {
     @GetMapping("/stats")
     public ResponseEntity<InstructorStatsResponse> getInstructorStats(Principal principal) {
         InstructorStatsResponse stats = instructorService.getInstructorStats(principal);
+        return ResponseEntity.ok(stats);
+    }
+
+    /**
+     * Get program statistics including student count
+     */
+    @GetMapping("/programs/{programId}/stats")
+    public ResponseEntity<ProgramStatsResponse> getProgramStats(
+            @PathVariable Integer programId,
+            Principal principal) {
+        ProgramStatsResponse stats = instructorService.getProgramStats(principal, programId);
         return ResponseEntity.ok(stats);
     }
 

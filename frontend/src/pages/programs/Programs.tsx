@@ -6,9 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card-enhanced";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import PaymentModal from "@/components/ui/payment-modal";
 import { toast } from "@/hooks/use-toast";
 import { programsApi, userProgramsApi, type Program, type UserProgram } from "@/lib/api";
+import { useDropdownLock } from "@/hooks/use-dropdown-lock";
 
 export const Programs = () => {
   const navigate = useNavigate();
@@ -19,8 +19,9 @@ export const Programs = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("all");
   const [selectedSort, setSelectedSort] = useState<string>("name");
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
+  
+  // Use dropdown lock to prevent layout shifts
+  useDropdownLock();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -161,9 +162,37 @@ export const Programs = () => {
     return isEnrolled;
   };
 
-  const handleEnrollClick = (program: Program) => {
-    setSelectedProgram(program);
-    setIsPaymentModalOpen(true);
+  const handleEnrollClick = async (program: Program) => {
+    try {
+      await userProgramsApi.createUserProgram(program.id);
+      
+      // Refresh the enrolled programs list
+      const enrolledResponse = await userProgramsApi.getUserPrograms({ page: 0, size: 100 });
+      setEnrolledPrograms(enrolledResponse.data.content || []);
+      
+      toast({
+        title: "Success",
+        description: "Successfully enrolled in program",
+      });
+    } catch (error: any) {
+      if (error.response?.status === 409) {
+        // User is already enrolled
+        toast({
+          variant: "default",
+          title: "Already Enrolled",
+          description: "You are already enrolled in this program",
+        });
+        // Refresh data to update the UI
+        const enrolledResponse = await userProgramsApi.getUserPrograms({ page: 0, size: 100 });
+        setEnrolledPrograms(enrolledResponse.data.content || []);
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to enroll in program",
+        });
+      }
+    }
   };
 
   const handleContinueProgram = (program: Program) => {
@@ -207,28 +236,48 @@ export const Programs = () => {
             </div>
             
             <div className="flex flex-col sm:flex-row gap-4">
-              <Select value={selectedDifficulty} onValueChange={setSelectedDifficulty}>
-                <SelectTrigger className="w-full sm:w-40">
-                  <Filter className="w-4 h-4 mr-2" />
+              <Select 
+                value={selectedDifficulty} 
+                onValueChange={setSelectedDifficulty}
+                onOpenChange={(open) => {
+                  if (open) {
+                    document.body.classList.add('dropdown-open');
+                  } else {
+                    document.body.classList.remove('dropdown-open');
+                  }
+                }}
+              >
+                <SelectTrigger className="w-full sm:w-40 bg-background border-border text-foreground">
+                  <Filter className="w-4 h-4 mr-2 text-muted-foreground" />
                   <SelectValue placeholder="Difficulty" />
                 </SelectTrigger>
-                <SelectContent className="bg-white">
-                  <SelectItem value="all">All Levels</SelectItem>
-                  <SelectItem value="Beginner">Beginner</SelectItem>
-                  <SelectItem value="Intermediate">Intermediate</SelectItem>
-                  <SelectItem value="Advanced">Advanced</SelectItem>
+                <SelectContent className="bg-popover border-border">
+                  <SelectItem value="all" className="text-popover-foreground">All Levels</SelectItem>
+                  <SelectItem value="Beginner" className="text-popover-foreground">Beginner</SelectItem>
+                  <SelectItem value="Intermediate" className="text-popover-foreground">Intermediate</SelectItem>
+                  <SelectItem value="Advanced" className="text-popover-foreground">Advanced</SelectItem>
                 </SelectContent>
               </Select>
 
-              <Select value={selectedSort} onValueChange={setSelectedSort}>
-                <SelectTrigger className="w-full sm:w-40">
-                  <SortDesc className="w-4 h-4 mr-2" />
+              <Select 
+                value={selectedSort} 
+                onValueChange={setSelectedSort}
+                onOpenChange={(open) => {
+                  if (open) {
+                    document.body.classList.add('dropdown-open');
+                  } else {
+                    document.body.classList.remove('dropdown-open');
+                  }
+                }}
+              >
+                <SelectTrigger className="w-full sm:w-40 bg-background border-border text-foreground">
+                  <SortDesc className="w-4 h-4 mr-2 text-muted-foreground" />
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
-                <SelectContent className="bg-white">
-                  <SelectItem value="name">Name</SelectItem>
-                  <SelectItem value="price">Price</SelectItem>
-                  <SelectItem value="difficulty">Difficulty</SelectItem>
+                <SelectContent className="bg-popover border-border">
+                  <SelectItem value="name" className="text-popover-foreground">Name</SelectItem>
+                  <SelectItem value="price" className="text-popover-foreground">Price</SelectItem>
+                  <SelectItem value="difficulty" className="text-popover-foreground">Difficulty</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -337,17 +386,6 @@ export const Programs = () => {
         </Card>
       )}
       
-      {/* Payment Modal */}
-      {selectedProgram && (
-        <PaymentModal
-          isOpen={isPaymentModalOpen}
-          onClose={() => {
-            setIsPaymentModalOpen(false);
-            setSelectedProgram(null);
-          }}
-          program={selectedProgram}
-        />
-      )}
     </div>
   );
 };

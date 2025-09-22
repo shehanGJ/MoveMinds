@@ -85,6 +85,10 @@ MoveMinds is not just a fitness tracker - it's a comprehensive learning platform
 ![Program Creation Difficulty](screenshots/ins3.png)
 *Second step of the program creation form focusing on difficulty level selection and additional program details. Features difficulty level options (Beginner, Intermediate, Advanced), program duration settings, pricing configuration, and location selection with dropdown menus for easy selection.*
 
+#### Instructor Course Content Management
+![Instructor Course Content Management](screenshots/ins4.png)
+*Instructor course content management interface allowing instructors to create and manage detailed course content for their programs. Features module creation, lesson management, resource uploads, content organization, and publishing controls to build comprehensive learning experiences for students.*
+
 ### User Dashboard Screenshots
 
 #### User Dashboard Overview

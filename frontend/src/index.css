@@ -134,7 +134,82 @@
     @apply border-border;
   }
 
+  html {
+    /* Ensure consistent viewport width */
+    width: 100%;
+    height: 100%;
+    /* Force scrollbar to always be present to prevent layout shifts */
+    overflow-y: scroll;
+  }
+
   body {
     @apply bg-background text-foreground;
+    /* Prevent body from shifting when scrollbar appears/disappears */
+    overflow-x: hidden;
+    /* Ensure consistent layout */
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Ensure header stability */
+  header {
+    /* Prevent any layout shifts */
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    /* Ensure consistent positioning */
+    transform: translateZ(0);
+    will-change: auto;
+  }
+
+  /* Prevent container from shifting when scrollbar changes */
+  .container {
+    /* Ensure container width is stable */
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* Prevent main content from shifting */
+  main {
+    /* Ensure main content doesn't shift */
+    position: relative;
+    width: 100%;
+  }
+
+  /* Prevent layout shifts from dropdowns */
+  [data-radix-select-trigger] {
+    /* Ensure trigger doesn't cause layout shifts */
+    position: relative;
+  }
+
+  /* Ensure dropdown content is properly positioned */
+  [data-radix-select-content] {
+    /* Ensure dropdown content has proper z-index and positioning */
+    z-index: 50 !important;
+    position: fixed !important;
+  }
+
+  /* Prevent body from shifting when dropdowns are open */
+  body.dropdown-open {
+    /* Lock body position when dropdown is open */
+    position: fixed;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  /* Alternative approach - prevent any layout shifts */
+  * {
+    /* Ensure no element can cause layout shifts */
+    box-sizing: border-box;
+  }
+
+  /* Force consistent viewport behavior */
+  html, body {
+    /* Prevent any viewport changes */
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
   }
 }

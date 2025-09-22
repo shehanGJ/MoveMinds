@@ -5,6 +5,7 @@ import com.java.moveminds.dto.response.FitnessProgramListResponse;
 import com.java.moveminds.dto.response.FitnessProgramResponse;
 import com.java.moveminds.dto.response.InstructorStatsResponse;
 import com.java.moveminds.dto.response.ProgramEnrollmentResponse;
+import com.java.moveminds.dto.response.ProgramStatsResponse;
 import com.java.moveminds.entities.UserEntity;
 import com.java.moveminds.entities.UserProgramEntity;
 import com.java.moveminds.enums.Roles;
@@ -220,6 +221,33 @@ public class InstructorServiceImpl implements InstructorService {
                 .status(enrollment.getStatus().name())
                 .enrolledAt(enrollment.getCreatedAt())
                 .progress(0) // TODO: Calculate actual progress
+                .build();
+    }
+
+    @Override
+    @PreAuthorize("hasRole('ROLE_INSTRUCTOR') or hasRole('ROLE_ADMIN')")
+    public ProgramStatsResponse getProgramStats(Principal principal, Integer programId) {
+        validateInstructorAccess(principal);
+        
+        // Verify the program belongs to the instructor and get program details
+        FitnessProgramResponse program = fitnessProgramService.getFitnessProgram(programId);
+        String programName = program.getName();
+        
+        // Calculate statistics
+        long totalStudents = userProgramRepository.countDistinctStudentsByProgramId(programId);
+        long activeStudents = userProgramRepository.countDistinctStudentsByProgramIdAndStatus(programId, Status.ACTIVE);
+        long totalEnrollments = userProgramRepository.countEnrollmentsByProgramId(programId);
+        long activeEnrollments = userProgramRepository.countEnrollmentsByProgramIdAndStatus(programId, Status.ACTIVE);
+        long inactiveEnrollments = userProgramRepository.countEnrollmentsByProgramIdAndStatus(programId, Status.INACTIVE);
+        
+        return ProgramStatsResponse.builder()
+                .programId(programId)
+                .programName(programName)
+                .totalStudents(totalStudents)
+                .activeStudents(activeStudents)
+                .totalEnrollments(totalEnrollments)
+                .activeEnrollments(activeEnrollments)
+                .completedEnrollments(inactiveEnrollments)
                 .build();
     }
 }

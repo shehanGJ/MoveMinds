@@ -55,4 +55,17 @@ public interface UserProgramEntityRepository extends JpaRepository<UserProgramEn
     
     @Query("SELECT SUM(fp.price) FROM UserProgramEntity up JOIN up.fitnessProgramByProgramId fp WHERE up.createdAt >= :startDate")
     BigDecimal calculateRevenueAfter(@Param("startDate") LocalDateTime startDate);
+    
+    // Student count methods for programs
+    @Query("SELECT COUNT(DISTINCT up.userByUserId) FROM UserProgramEntity up WHERE up.fitnessProgramByProgramId.id = :programId")
+    long countDistinctStudentsByProgramId(@Param("programId") Integer programId);
+    
+    @Query("SELECT COUNT(DISTINCT up.userByUserId) FROM UserProgramEntity up WHERE up.fitnessProgramByProgramId.id = :programId AND up.status = :status")
+    long countDistinctStudentsByProgramIdAndStatus(@Param("programId") Integer programId, @Param("status") Status status);
+    
+    @Query("SELECT COUNT(up) FROM UserProgramEntity up WHERE up.fitnessProgramByProgramId.id = :programId")
+    long countEnrollmentsByProgramId(@Param("programId") Integer programId);
+    
+    @Query("SELECT COUNT(up) FROM UserProgramEntity up WHERE up.fitnessProgramByProgramId.id = :programId AND up.status = :status")
+    long countEnrollmentsByProgramIdAndStatus(@Param("programId") Integer programId, @Param("status") Status status);
 }

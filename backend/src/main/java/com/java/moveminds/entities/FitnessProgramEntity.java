@@ -67,6 +67,11 @@ public class FitnessProgramEntity {
     @JsonIgnore
     @OneToMany(mappedBy = "fitnessProgramByProgramId", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserProgramEntity> userPrograms;
+    
+    @JsonIgnore
+    @OneToMany(mappedBy = "fitnessProgram", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("orderIndex ASC")
+    private List<ProgramModuleEntity> modules;
 
 }
 

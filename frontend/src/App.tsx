@@ -19,6 +19,7 @@ import { Activities } from "./pages/Activities";
 import { Messages } from "./pages/Messages";
 import { MyPrograms } from "./pages/MyPrograms";
 import { InstructorDashboard } from "./pages/instructor/InstructorDashboard";
+import ProgramContentManagement from "./pages/instructor/ProgramContentManagement";
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
 import { AdminPrograms } from "./pages/admin/AdminPrograms";
 import AdminUsers from "./pages/admin/AdminUsers";
@@ -85,6 +86,7 @@ const App = () => (
             <Route index element={<Navigate to="/instructor/dashboard" replace />} />
             <Route path="dashboard" element={<InstructorDashboard />} />
             <Route path="programs" element={<div>Instructor Programs - Coming Soon</div>} />
+            <Route path="programs/:programId/content" element={<ProgramContentManagement />} />
             <Route path="students" element={<div>Students - Coming Soon</div>} />
             <Route path="analytics" element={<div>Instructor Analytics - Coming Soon</div>} />
             <Route path="schedule" element={<div>Schedule - Coming Soon</div>} />

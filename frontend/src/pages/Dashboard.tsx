@@ -89,28 +89,24 @@ export const Dashboard = () => {
       description: "Discover new fitness programs",
       icon: Dumbbell,
       href: "/programs",
-      variant: "hero" as const,
     },
     {
       title: "My Programs",
       description: "View enrolled programs",
       icon: Calendar,
       href: "/dashboard/my-programs",
-      variant: "fitness" as const,
     },
     {
       title: "Log Activity",
       description: "Record your workout",
       icon: ActivityIcon,
       href: "/dashboard/activities",
-      variant: "gradient" as const,
     },
     {
       title: "Messages",
       description: "Check your messages",
       icon: MessageCircle,
       href: "/dashboard/messages",
-      variant: "neumorphic" as const,
     },
   ];
 
@@ -126,7 +122,7 @@ export const Dashboard = () => {
       value: activePrograms.toString(),
       icon: Dumbbell,
       change: `${userPrograms.length} total`,
-      trend: "up",
+      color: "text-primary",
     },
     {
       title: "Activities Logged",
@@ -138,7 +134,7 @@ export const Dashboard = () => {
         weekAgo.setDate(weekAgo.getDate() - 7);
         return activityDate >= weekAgo;
       }).length} this week`,
-      trend: "up",
+      color: "text-blue-400",
     },
     {
       title: "Hours Trained",
@@ -150,14 +146,14 @@ export const Dashboard = () => {
         weekAgo.setDate(weekAgo.getDate() - 7);
         return activityDate >= weekAgo;
       }).reduce((sum, activity) => sum + (activity.duration || 0), 0) / 60)} this week`,
-      trend: "up",
+      color: "text-green-400",
     },
     {
       title: "Achievements",
       value: achievements.toString(),
       icon: Award,
       change: "Based on progress",
-      trend: "up",
+      color: "text-yellow-400",
     },
   ];
 
@@ -180,17 +176,17 @@ export const Dashboard = () => {
       {/* Welcome Section */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
         <div className="flex items-center gap-4">
-          <Avatar className="w-20 h-20 ring-2 ring-primary/30 shadow-subtle">
+          <Avatar className="w-16 h-16 ring-2 ring-border shadow-subtle">
             <AvatarImage src={user?.avatarUrl} alt={user?.firstName} />
-            <AvatarFallback className="bg-gradient-primary text-white text-xl font-bold">
+            <AvatarFallback className="bg-muted text-foreground text-lg font-semibold">
               {user?.firstName?.[0]}{user?.lastName?.[0]}
             </AvatarFallback>
           </Avatar>
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold text-foreground">
               Welcome back, {user?.firstName}! 👋
             </h1>
-            <p className="text-muted-foreground text-lg">
+            <p className="text-muted-foreground mt-1">
               Ready to crush your fitness goals today?
             </p>
           </div>
@@ -199,7 +195,7 @@ export const Dashboard = () => {
           <Button variant="outline" asChild>
             <Link to="/dashboard/profile">View Profile</Link>
           </Button>
-          <Button variant="hero" asChild>
+          <Button variant="default" asChild>
             <Link to="/programs">Browse Programs</Link>
           </Button>
         </div>
@@ -214,20 +210,15 @@ export const Dashboard = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-semibold text-muted-foreground">
+                    <p className="text-sm font-medium text-muted-foreground">
                       {stat.title}
                     </p>
-                    <p className="text-3xl font-bold text-foreground">{stat.value}</p>
+                    <p className="text-2xl font-bold mt-2">{stat.value}</p>
+                    <p className={`text-sm ${stat.color} mt-1`}>{stat.change}</p>
                   </div>
-                  <div className="w-14 h-14 bg-gradient-primary/20 rounded-full flex items-center justify-center shadow-subtle">
-                    <Icon className="w-7 h-7 text-primary" />
+                  <div className={`p-3 rounded-lg bg-background/50 ${stat.color}`}>
+                    <Icon className="w-6 h-6" />
                   </div>
-                </div>
-                <div className="mt-4 flex items-center gap-1">
-                  <TrendingUp className="w-4 h-4 text-primary" />
-                  <span className="text-sm text-primary font-semibold">
-                    {stat.change}
-                  </span>
                 </div>
               </CardContent>
             </Card>
@@ -237,7 +228,7 @@ export const Dashboard = () => {
 
       {/* Quick Actions */}
       <div>
-        <h2 className="text-2xl font-bold mb-6 bg-gradient-primary bg-clip-text text-transparent">Quick Actions</h2>
+        <h2 className="text-2xl font-bold mb-6 text-foreground">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {quickActions.map((action) => {
             const Icon = action.icon;
@@ -248,14 +239,14 @@ export const Dashboard = () => {
                 className="group hover:shadow-glow transition-all duration-300"
               >
                 <CardContent className="p-6 text-center">
-                  <div className="w-16 h-16 bg-gradient-primary/20 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-gradient-primary/30 transition-all duration-200 shadow-subtle">
-                    <Icon className="w-8 h-8 text-primary" />
+                  <div className="w-12 h-12 bg-muted/50 rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:bg-muted transition-all duration-200">
+                    <Icon className="w-6 h-6 text-muted-foreground" />
                   </div>
-                  <h3 className="font-bold mb-2 text-foreground">{action.title}</h3>
+                  <h3 className="font-semibold mb-2 text-foreground">{action.title}</h3>
                   <p className="text-sm text-muted-foreground mb-4">
                     {action.description}
                   </p>
-                  <Button variant="hero" size="sm" asChild className="w-full">
+                  <Button variant="default" size="sm" asChild className="w-full">
                     <Link to={action.href}>Get Started</Link>
                   </Button>
                 </CardContent>
@@ -268,7 +259,7 @@ export const Dashboard = () => {
       {/* Recent Activities */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">Recent Activities</h2>
+          <h2 className="text-xl font-semibold text-foreground">Recent Activities</h2>
           <Button variant="ghost" size="sm" asChild>
             <Link to="/dashboard/activities">View All</Link>
           </Button>
@@ -286,7 +277,7 @@ export const Dashboard = () => {
                       {new Date(activity.logDate).toLocaleDateString()}
                     </span>
                   </div>
-                  <h3 className="font-semibold mb-2">
+                  <h3 className="font-semibold mb-2 text-foreground">
                     {activity.activityType} Session
                   </h3>
                   <div className="space-y-1 text-sm text-muted-foreground">
@@ -300,14 +291,14 @@ export const Dashboard = () => {
           ) : (
             <Card variant="neumorphic" className="col-span-full">
               <CardContent className="p-8 text-center">
-                <div className="w-16 h-16 bg-gradient-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <ActivityIcon className="w-8 h-8 text-primary" />
+                <div className="w-16 h-16 bg-muted/50 rounded-lg flex items-center justify-center mx-auto mb-4">
+                  <ActivityIcon className="w-8 h-8 text-muted-foreground" />
                 </div>
-                <h3 className="font-semibold mb-2">Start Your Journey</h3>
+                <h3 className="font-semibold mb-2 text-foreground">Start Your Journey</h3>
                 <p className="text-muted-foreground mb-4">
                   Log your first activity to see your progress here.
                 </p>
-                <Button variant="hero" asChild>
+                <Button variant="default" asChild>
                   <Link to="/dashboard/activities">Log Activity</Link>
                 </Button>
               </CardContent>
@@ -320,7 +311,7 @@ export const Dashboard = () => {
       {conversations.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">Recent Messages</h2>
+            <h2 className="text-xl font-semibold text-foreground">Recent Messages</h2>
             <Button variant="ghost" size="sm" asChild>
               <Link to="/dashboard/messages">View All</Link>
             </Button>
@@ -337,7 +328,7 @@ export const Dashboard = () => {
                       {new Date(conversation.lastMessageAt).toLocaleDateString()}
                     </span>
                   </div>
-                  <h3 className="font-semibold mb-1 text-sm">
+                  <h3 className="font-semibold mb-1 text-sm text-foreground">
                     {conversation.otherUserFirstName} {conversation.otherUserLastName}
                   </h3>
                   <p className="text-xs text-muted-foreground line-clamp-2">

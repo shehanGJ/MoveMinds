@@ -1,20 +1,10 @@
 import { Link } from "react-router-dom";
-import { Dumbbell, TrendingUp, Users, Award, ArrowRight, Star, CheckCircle } from "lucide-react";
+import { Dumbbell, TrendingUp, Users, Award, ArrowRight, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card-enhanced";
 import { Badge } from "@/components/ui/badge";
-import { citiesApi } from "@/lib/api";
-import { useEffect, useState } from "react";
 
 const Index = () => {
-  const [apiConnected, setApiConnected] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    // Test API connection
-    citiesApi.getAll()
-      .then(() => setApiConnected(true))
-      .catch(() => setApiConnected(false));
-  }, []);
 
   const features = [
     {
@@ -66,21 +56,10 @@ const Index = () => {
       <section className="relative overflow-hidden bg-gradient-hero py-20 lg:py-32">
         <div className="absolute inset-0 bg-black/10"></div>
         <div className="relative container mx-auto px-4 text-center">
-          <div className="flex flex-col items-center gap-4 mb-6">
-            <Badge className="bg-white/20 text-white border-white/30">
+          <div className="flex flex-col items-center gap-4 mb-4">
+            <Badge className="bg-green-500/20 text-green-100 border-green-300/30">
               🎉 Welcome to MoveMinds
             </Badge>
-            {apiConnected === true && (
-              <Badge className="bg-green-500/20 text-green-100 border-green-300/30 flex items-center gap-2">
-                <CheckCircle className="w-4 h-4" />
-                Backend Connected
-              </Badge>
-            )}
-            {apiConnected === false && (
-              <Badge className="bg-red-500/20 text-red-100 border-red-300/30">
-                Backend Disconnected
-              </Badge>
-            )}
           </div>
           <h1 className="text-4xl lg:text-6xl font-bold text-white mb-6 animate-fade-in">
             Transform Your 

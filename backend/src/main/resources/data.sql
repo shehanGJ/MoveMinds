@@ -101,11 +101,16 @@ INSERT INTO subscription (user_id, category_id) VALUES
 (5, 4); -- user2 subscribed to Pilates
 
 -- Insert sample user programs (users enrolled in programs)
-INSERT INTO user_program (user_id, program_id) VALUES 
-(4, 1), -- user1 enrolled in Morning Cardio Blast
-(4, 2), -- user1 enrolled in Strength Training Basics
-(5, 3), -- user2 enrolled in Yoga for Beginners
-(5, 5); -- user2 enrolled in Pilates Core Workout
+INSERT INTO user_program (user_id, program_id, status, start_date, end_date) VALUES 
+(4, 1, 'ACTIVE', '2024-01-01', '2024-03-01'), -- user1 enrolled in Morning Cardio Blast
+(4, 2, 'ACTIVE', '2024-01-15', '2024-04-15'), -- user1 enrolled in Strength Training Basics
+(5, 3, 'ACTIVE', '2024-02-01', '2024-05-01'), -- user2 enrolled in Yoga for Beginners
+(5, 5, 'ACTIVE', '2024-02-15', '2024-05-15'), -- user2 enrolled in Pilates Core Workout
+(6, 1, 'ACTIVE', '2024-01-10', '2024-03-10'), -- user3 enrolled in Morning Cardio Blast
+(6, 2, 'ACTIVE', '2024-01-20', '2024-04-20'), -- user3 enrolled in Strength Training Basics
+(7, 3, 'ACTIVE', '2024-02-05', '2024-05-05'), -- user4 enrolled in Yoga for Beginners
+(8, 1, 'ACTIVE', '2024-01-15', '2024-03-15'), -- user5 enrolled in Morning Cardio Blast
+(8, 5, 'ACTIVE', '2024-02-20', '2024-05-20'); -- user5 enrolled in Pilates Core Workout
 CREATE TABLE activity
 (
     id            INT AUTO_INCREMENT NOT NULL,
